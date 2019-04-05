@@ -1,6 +1,9 @@
+from calendar import timegm
+from click import argument
+from datetime import datetime
 from feedparser import parse
 from flask import Flask, render_template
-from pony.orm import Database, db_session, Required, select, Set, set_sql_debug
+from pony.orm import composite_key, Database, db_session, delete, desc, Optional, Required, select, Set, set_sql_debug
 
 
 app = Flask(__name__)
@@ -8,8 +11,21 @@ db = Database()
 
 
 class Source(db.Entity):
+    feed_uri = Required(str, unique=True)
+    entries = Set('Entry')
     label = Required(str)
-    uri = Required(str)
+    last_check = Required(datetime)
+    last_fetch = Required(datetime)
+    link = Required(str)
+
+
+class Entry(db.Entity):
+    link = Required(str)
+    source = Required(Source)
+    summary = Optional(str)
+    title = Required(str)
+    updated = Required(datetime)
+    composite_key(source, link, title, updated)
 
 
 db.bind(provider='sqlite', filename='feeds.sqlite', create_db=True)
@@ -18,20 +34,53 @@ db.generate_mapping(create_tables=True)
 
 
 @app.cli.command()
-def initdb():
+@argument('uri_file_path')
+def reset(uri_file_path):
+    earliest = datetime.min
     with db_session:
-        Source(label='Behind the GIFs', uri='https://www.webtoons.com/en/comedy/behind-the-gifs/rss?title_no=658')
-        Source(label='Indexed', uri='http://thisisindexed.com/feed/')
-        Source(label='XKCD', uri='https://xkcd.com/atom.xml')
+        delete(s for s in Source)
+        delete(e for e in Entry)
+
+        with open(uri_file_path) as f:
+            for line in f:
+                uri = line.strip()
+                if not uri:
+                    continue
+
+                feed = parse(uri)
+                Source(feed_uri=uri, label=feed['feed']['title'], last_check=earliest, last_fetch=earliest,
+                       link=feed['feed']['link'])
 
 
 @app.route('/')
 def root():
-    feeds = []
+    with db_session:
+        entries = select(e for e in Entry).order_by(desc(Entry.updated))
+
+        output = render_template('root.html', entries=entries)
+
+    return output
+
+
+@app.cli.command()
+def update():
     with db_session:
         sources = select(s for s in Source)
         for source in sources:
-            feed = parse(source.uri)
-            feeds.append(feed)
+            feed = parse(source.feed_uri)
+            if feed['bozo']:
+                continue
 
-    return render_template('root.html', feeds=feeds)
+            for entry in feed['entries']:
+                # build UTC time
+                timestamp = timegm(entry['updated_parsed'])
+                updated = datetime.utcfromtimestamp(timestamp)
+
+                link = entry['link']
+                title = entry['title']
+
+                check = Entry.get(link=link, source=source, title=title, updated=updated)
+                if check is not None:
+                    continue
+
+                Entry(link=link, source=source, summary=entry['summary'], title=title, updated=updated)

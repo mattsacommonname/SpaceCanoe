@@ -9,22 +9,20 @@
 <body>
     <h1>Feeds</h1>
     <table>
-        {% for feed in feeds %}
-            {% for entry in feed['entries'] %}
-                <tr>
-                    <td>
-                        <a href="{{ feed['feed']['link'] }}">{{ feed['feed']['title'] }}</a>
-                    </td>
-                    <td>{{ entry['updated'] }}</td>
-                    <td>
-                        <a href="{{ entry['link'] }}">{{ entry['title'] }}</a>
-                    </td>
-                    <td colspan="3">{{ entry['summary'] | striptags }}</td>
-                </tr>
-                <tr>
-                    <td colspan="3">{{ entry['summary'] | safe }}</td>
-                </tr>
-            {% endfor %}
+        {% for entry in entries %}
+            <tr>
+                <td style="white-space:nowrap">
+                    <a href="{{ entry.source.link }}">{{ entry.source.label }}</a>
+                </td>
+                <td style="white-space:nowrap">{{ entry.updated }}</td>
+                <td>
+                    <a href="{{ entry.link }}">{{ entry.title }}</a>
+                </td>
+                <td>{{ entry.summary | striptags }}</td>
+            </tr>
+            <!--<tr>
+                <td colspan="3">{{ entry['summary'] | safe }}</td>
+            </tr>-->
         {% endfor %}
     </table>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
