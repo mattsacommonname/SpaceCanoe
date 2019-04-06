@@ -3,10 +3,12 @@ from click import argument
 from datetime import datetime
 from feedparser import parse
 from flask import Flask, render_template
+from flask_restful import Api, fields, marshal, Resource
 from pony.orm import composite_key, Database, db_session, delete, desc, Optional, Required, select, Set, set_sql_debug
 
 
 app = Flask(__name__)
+api = Api(app)
 db = Database()
 
 
@@ -26,6 +28,33 @@ class Entry(db.Entity):
     title = Required(str)
     updated = Required(datetime)
     composite_key(source, link, title, updated)
+
+
+source_in_entry_fields = {
+    'link': fields.String,
+    'label': fields.String
+}
+
+
+entry_fields = {
+    'link': fields.String,
+    'source': fields.Nested(source_in_entry_fields),
+    'summary': fields.String,
+    'title': fields.String,
+    'updated': fields.DateTime
+}
+
+
+class Entries(Resource):
+    def get(self):
+        with db_session:
+            result = select(e for e in Entry).order_by(desc(Entry.updated))
+            entries = list(result)
+            output = marshal(entries, entry_fields)
+            return output
+
+
+api.add_resource(Entries, '/entries')
 
 
 db.bind(provider='sqlite', filename='feeds.sqlite', create_db=True)
