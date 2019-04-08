@@ -5,28 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Feeds</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+        tr:nth-child(odd) {
+            background-color: #eeeeee }
+        td {
+            vertical-align: top }
+        td.meta-info {
+            white-space:nowrap }
+    </style>
 </head>
 <body>
-    <h1>Feeds</h1>
-    <table>
-        {% for entry in entries %}
-            <tr>
-                <td style="white-space:nowrap">
-                    <a href="{{ entry.source.link }}">{{ entry.source.label }}</a>
-                </td>
-                <td style="white-space:nowrap">{{ entry.updated }}</td>
-                <td>
-                    <a href="{{ entry.link }}">{{ entry.title }}</a>
-                </td>
-                <td>{{ entry.summary | striptags }}</td>
-            </tr>
-            <!--<tr>
-                <td colspan="3">{{ entry['summary'] | safe }}</td>
-            </tr>-->
-        {% endfor %}
-    </table>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <div id="entries-table">Loading...</div>
+    {% raw %}
+        <script id="entries-template" type="text/x-handlebars-template">
+            <table>
+                {{#each this}}
+                    <tr>
+                        <td class="meta-info">
+                            <a href="{{ source.link }}">{{ source.label }}</a>
+                        </td>
+                        <td class="meta-info">{{ updated }}</td>
+                        <td class="meta-info">
+                            <a href="{{ entry.link }}">{{ title }}</a>
+                        </td>
+                        <td>{{{ summary }}}</td>
+                    </tr>
+                {{/each}}
+            </table>
+        </script>
+    {% endraw %}
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.1.1/handlebars.min.js" integrity="sha256-Mki72593zH3nxiQrW1mskmSOAXOep8FVIK0ozKFISyY=" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $.get('/entries', function(data, status){
+                var source = $('#entries-template').html();
+                var template = Handlebars.compile(source);
+                var html = template(data);
+                $('#entries-table').html(html);
+            });
+        });
+    </script>
 </body>
 </html>
