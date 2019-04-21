@@ -95,10 +95,15 @@ def root():
 def update():
     with db_session:
         sources = select(s for s in Source)
+        sources_processed = 0
+        entries_processed = 0
+        entries_added = 0
         for source in sources:
             feed = parse(source.feed_uri)
             if feed['bozo']:
                 continue
+
+            sources_processed += 1
 
             for entry in feed['entries']:
                 # build UTC time
@@ -108,8 +113,14 @@ def update():
                 link = entry['link']
                 title = entry['title']
 
+                entries_processed += 1
+
                 check = Entry.get(link=link, source=source, title=title, updated=updated)
                 if check is not None:
                     continue
 
+                entries_added += 1
+
                 Entry(link=link, source=source, summary=entry['summary'], title=title, updated=updated)
+
+        print(f'sources processed\t{sources_processed}\nentries processed\t{entries_processed}\nentries added\t{entries_added}')
