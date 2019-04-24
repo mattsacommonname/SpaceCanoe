@@ -5,14 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Feeds</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <style>
-        tr:nth-child(odd) {
-            background-color: #eeeeee }
-        td {
-            vertical-align: top }
-        td.meta-info {
-            white-space: nowrap }
-    </style>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div id="entries-table">Loading...</div>
@@ -37,15 +30,6 @@
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.1.1/handlebars.min.js" integrity="sha256-Mki72593zH3nxiQrW1mskmSOAXOep8FVIK0ozKFISyY=" crossorigin="anonymous"></script>
-    <script type="text/javascript">
-        $(document).ready(function(){
-            $.get('/entries', function(data, status){
-                var source = $('#entries-template').html();
-                var template = Handlebars.compile(source);
-                var html = template(data);
-                $('#entries-table').html(html);
-            });
-        });
-    </script>
+    <script src="/static/scripting.js"></script>
 </body>
 </html>

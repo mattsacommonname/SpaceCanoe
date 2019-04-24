@@ -1,0 +1,8 @@
+tr:nth-child(odd) {
+    background-color: #eeeeee }
+
+td {
+    vertical-align: top }
+
+td.meta-info {
+    white-space: nowrap }
