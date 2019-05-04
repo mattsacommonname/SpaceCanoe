@@ -2,14 +2,22 @@ from calendar import timegm
 from click import argument
 from datetime import datetime
 from feedparser import parse
-from flask import Flask, render_template
+from flask import flash, Flask, redirect, render_template, request, url_for
+from flask_login import current_user, login_required, login_user, LoginManager, logout_user, UserMixin
 from flask_restful import Api, fields, marshal, Resource
-from pony.orm import composite_key, Database, db_session, delete, desc, Optional, Required, select, Set, set_sql_debug
+from pony.orm import composite_key, Database, db_session, delete, desc, Optional, PrimaryKey, Required, select, Set,\
+    set_sql_debug
+from uuid import UUID, uuid4
+from werkzeug.security import check_password_hash, generate_password_hash
 
 
 app = Flask(__name__)
 api = Api(app)
 db = Database()
+login_manager = LoginManager()
+
+
+app.secret_key = b'\x02\x94o\x97\xd4V\x8a\xb0\x91\xa8\x93\x89\x94\x80\xac\x00'
 
 
 class Source(db.Entity):
@@ -30,6 +38,19 @@ class Entry(db.Entity):
     composite_key(source, link, title, updated)
 
 
+class UserModel(db.Entity):
+    _table_ = 'User'
+    user_id = PrimaryKey(UUID, default=uuid4)
+    name = Required(str, unique=True)
+    password_hash = Required(str)
+
+    @classmethod
+    def build(cls, name, password):
+        password_hash = generate_password_hash(password)
+        user = UserModel(name=name, password_hash=password_hash)
+        return user
+
+
 source_in_entry_fields = {
     'link': fields.String,
     'label': fields.String
@@ -46,7 +67,10 @@ entry_fields = {
 
 
 class Entries(Resource):
-    def get(self):
+    decorators = [login_required]
+
+    @staticmethod
+    def get():
         with db_session:
             result = select(e for e in Entry).order_by(desc(Entry.updated))
             entries = list(result)
@@ -57,9 +81,77 @@ class Entries(Resource):
 api.add_resource(Entries, '/entries')
 
 
+class User(UserMixin):
+    def __init__(self, user_id: UUID, name: str):
+        self.user_id = user_id
+        self.name = name
+
+    def get_id(self):
+        id_text = str(self.user_id)
+        return id_text
+
+
 db.bind(provider='sqlite', filename='data/feeds.sqlite', create_db=True)
 set_sql_debug(True)
 db.generate_mapping(create_tables=True)
+
+
+login_manager.init_app(app)
+
+
+@app.cli.command()
+@argument('name')
+@argument('password')
+def adduser(name, password):
+    with db_session:
+        model = UserModel.get(name=name)
+        if model:
+            print(f'User "{name}" already exists.')
+            return
+
+        UserModel.build(name, password)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    with db_session:
+        model = UserModel[user_id]
+        if not model:
+            return None
+
+        user = User(model.user_id, model.name)
+        return user
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    name = request.form['name']
+    password = request.form['password']
+    url = url_for('root')
+    output = redirect(url)
+
+    with db_session:
+        model = UserModel.get(name=name)
+        if not model or not check_password_hash(model.password_hash, password):
+            flash('User login failed.', 'error')
+            return output
+
+        user = User(model.user_id, model.name)
+        login_user(user, remember=True)
+        flash(f'User "{name}" logged in.', 'info')
+
+        return output
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    name = current_user.name
+    logout_user()
+    flash(f'User "{name}" logged out.', 'info')
+    url = url_for('root')
+    output = redirect(url)
+    return output
 
 
 @app.cli.command()
