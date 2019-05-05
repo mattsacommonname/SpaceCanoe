@@ -99,6 +99,17 @@ db.generate_mapping(create_tables=True)
 login_manager.init_app(app)
 
 
+@login_manager.user_loader
+def load_user(user_id):
+    with db_session:
+        model = UserModel[user_id]
+        if not model:
+            return None
+
+        user = User(model.user_id, model.name)
+        return user
+
+
 @app.cli.command()
 @argument('name')
 @argument('password')
@@ -112,15 +123,60 @@ def adduser(name, password):
         UserModel.build(name, password)
 
 
-@login_manager.user_loader
-def load_user(user_id):
+@app.cli.command()
+@argument('uri_file_path')
+def reset(uri_file_path):
+    earliest = datetime.min
     with db_session:
-        model = UserModel[user_id]
-        if not model:
-            return None
+        delete(s for s in Source)
+        delete(e for e in Entry)
 
-        user = User(model.user_id, model.name)
-        return user
+        with open(uri_file_path) as f:
+            for line in f:
+                uri = line.strip()
+                if not uri:
+                    continue
+
+                feed = parse(uri)
+                Source(feed_uri=uri, label=feed['feed']['title'], last_check=earliest, last_fetch=earliest,
+                       link=feed['feed']['link'])
+
+
+@app.cli.command()
+def update():
+    sources_processed = 0
+    entries_processed = 0
+    entries_added = 0
+
+    with db_session:
+        sources = select(s for s in Source)
+        for source in sources:
+            feed = parse(source.feed_uri)
+            if feed['bozo']:
+                continue
+
+            sources_processed += 1
+
+            for entry in feed['entries']:
+                # build UTC time
+                timestamp = timegm(entry['updated_parsed'])
+                updated = datetime.utcfromtimestamp(timestamp)
+
+                link = entry['link']
+                title = entry['title']
+
+                entries_processed += 1
+
+                check = Entry.get(link=link, source=source, title=title, updated=updated)
+                if check is not None:
+                    continue
+
+                entries_added += 1
+
+                Entry(link=link, source=source, summary=entry['summary'], title=title, updated=updated)
+
+    print(f'sources processed\t{sources_processed}\nentries processed\t{entries_processed}',
+          f'entries added\t{entries_added}', sep='\n')
 
 
 @app.route('/login', methods=['POST'])
@@ -154,25 +210,6 @@ def logout():
     return output
 
 
-@app.cli.command()
-@argument('uri_file_path')
-def reset(uri_file_path):
-    earliest = datetime.min
-    with db_session:
-        delete(s for s in Source)
-        delete(e for e in Entry)
-
-        with open(uri_file_path) as f:
-            for line in f:
-                uri = line.strip()
-                if not uri:
-                    continue
-
-                feed = parse(uri)
-                Source(feed_uri=uri, label=feed['feed']['title'], last_check=earliest, last_fetch=earliest,
-                       link=feed['feed']['link'])
-
-
 @app.route('/')
 def root():
     with db_session:
@@ -181,38 +218,3 @@ def root():
         output = render_template('root.html', entries=entries)
 
     return output
-
-
-@app.cli.command()
-def update():
-    with db_session:
-        sources = select(s for s in Source)
-        sources_processed = 0
-        entries_processed = 0
-        entries_added = 0
-        for source in sources:
-            feed = parse(source.feed_uri)
-            if feed['bozo']:
-                continue
-
-            sources_processed += 1
-
-            for entry in feed['entries']:
-                # build UTC time
-                timestamp = timegm(entry['updated_parsed'])
-                updated = datetime.utcfromtimestamp(timestamp)
-
-                link = entry['link']
-                title = entry['title']
-
-                entries_processed += 1
-
-                check = Entry.get(link=link, source=source, title=title, updated=updated)
-                if check is not None:
-                    continue
-
-                entries_added += 1
-
-                Entry(link=link, source=source, summary=entry['summary'], title=title, updated=updated)
-
-        print(f'sources processed\t{sources_processed}\nentries processed\t{entries_processed}\nentries added\t{entries_added}')
