@@ -11,13 +11,15 @@ from uuid import UUID, uuid4
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
+# application
+
 app = Flask(__name__)
-api = Api(app)
-db = Database()
-login_manager = LoginManager()
-
-
 app.secret_key = b'\x02\x94o\x97\xd4V\x8a\xb0\x91\xa8\x93\x89\x94\x80\xac\x00'
+
+
+# database
+
+db = Database()
 
 
 class Source(db.Entity):
@@ -51,6 +53,16 @@ class UserModel(db.Entity):
         return user
 
 
+db.bind(provider='sqlite', filename='data/feeds.sqlite', create_db=True)
+set_sql_debug(True)
+db.generate_mapping(create_tables=True)
+
+
+# REST API
+
+api = Api(app)
+
+
 source_in_entry_fields = {
     'link': fields.String,
     'label': fields.String
@@ -81,6 +93,12 @@ class Entries(Resource):
 api.add_resource(Entries, '/entries')
 
 
+# login management
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+
 class User(UserMixin):
     def __init__(self, user_id: UUID, name: str):
         self.user_id = user_id
@@ -89,14 +107,6 @@ class User(UserMixin):
     def get_id(self):
         id_text = str(self.user_id)
         return id_text
-
-
-db.bind(provider='sqlite', filename='data/feeds.sqlite', create_db=True)
-set_sql_debug(True)
-db.generate_mapping(create_tables=True)
-
-
-login_manager.init_app(app)
 
 
 @login_manager.user_loader
@@ -109,6 +119,8 @@ def load_user(user_id):
         user = User(model.user_id, model.name)
         return user
 
+
+# cli
 
 @app.cli.command()
 @argument('name')
@@ -178,6 +190,8 @@ def update():
     print(f'sources processed\t{sources_processed}\nentries processed\t{entries_processed}',
           f'entries added\t{entries_added}', sep='\n')
 
+
+# routes
 
 @app.route('/login', methods=['POST'])
 def login():
