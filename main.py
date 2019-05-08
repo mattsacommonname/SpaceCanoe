@@ -5,10 +5,13 @@ from feedparser import parse
 from flask import flash, Flask, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, LoginManager, logout_user, UserMixin
 from flask_restful import Api, fields, marshal, Resource
+from flask_wtf import FlaskForm
 from pony.orm import composite_key, Database, db_session, delete, desc, Optional, PrimaryKey, Required, select, Set,\
     set_sql_debug
 from uuid import UUID, uuid4
 from werkzeug.security import check_password_hash, generate_password_hash
+from wtforms import PasswordField, StringField
+from wtforms.validators import DataRequired
 
 
 # application
@@ -120,6 +123,13 @@ def load_user(user_id):
         return user
 
 
+# forms
+
+class LoginForm(FlaskForm):
+    name = StringField('User name', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+
+
 # cli
 
 @app.cli.command()
@@ -195,10 +205,16 @@ def update():
 
 @app.route('/login', methods=['POST'])
 def login():
-    name = request.form['name']
-    password = request.form['password']
     url = url_for('root')
     output = redirect(url)
+
+    form = LoginForm()
+    if not form.validate_on_submit():
+        flash('User login failed.', 'error')
+        return output
+
+    name = form.name.data
+    password = form.password.data
 
     with db_session:
         model = UserModel.get(name=name)
@@ -226,9 +242,11 @@ def logout():
 
 @app.route('/')
 def root():
+    login_form = LoginForm()
+
     with db_session:
         entries = select(e for e in Entry).order_by(desc(Entry.updated))
 
-        output = render_template('root.html', entries=entries)
+        output = render_template('root.html', entries=entries, login_form=login_form)
 
     return output

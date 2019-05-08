@@ -34,7 +34,7 @@
                             <td class="meta-info">
                                 <a href="{{ link }}">{{ title }}</a>
                             </td>
-                            <td>{{{ summary }}}</td>
+                            <td>{{ summary }}</td>
                         </tr>
                     {{/each}}
                 </table>
@@ -42,9 +42,10 @@
         {% endraw %}
     {% else %}
         <form action="/login" method="post">
-            <div><label for="name">Name</label><input id="name" name="name" type="text"></div>
-            <div><label for="password">Password</label><input id="password" name="password" type="password"></div>
-            <div><input type="submit"></div>
+            {{ login_form.hidden_tag() }}
+            <div>{{ login_form.name.label }}{{ login_form.name() }}</div>
+            <div>{{ login_form.password.label }}{{ login_form.password() }}</div>
+            <div><input type="submit" value="Login"></div>
         </form>
     {% endif %}
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
