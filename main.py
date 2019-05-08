@@ -243,10 +243,5 @@ def logout():
 @app.route('/')
 def root():
     login_form = LoginForm()
-
-    with db_session:
-        entries = select(e for e in Entry).order_by(desc(Entry.updated))
-
-        output = render_template('root.html', entries=entries, login_form=login_form)
-
+    output = render_template('root.html', login_form=login_form)
     return output
