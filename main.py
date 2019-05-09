@@ -1,8 +1,8 @@
 from calendar import timegm
-from click import argument
+from click import Argument, Command
 from datetime import datetime
 from feedparser import parse
-from flask import flash, Flask, redirect, render_template, request, url_for
+from flask import flash, Flask, redirect, render_template, url_for
 from flask_login import current_user, login_required, login_user, LoginManager, logout_user, UserMixin
 from flask_restful import Api, fields, marshal, Resource
 from flask_wtf import FlaskForm
@@ -99,7 +99,6 @@ api.add_resource(Entries, '/entries')
 # login management
 
 login_manager = LoginManager()
-login_manager.init_app(app)
 
 
 class User(UserMixin):
@@ -123,6 +122,9 @@ def load_user(user_id):
         return user
 
 
+login_manager.init_app(app)
+
+
 # forms
 
 class LoginForm(FlaskForm):
@@ -132,9 +134,6 @@ class LoginForm(FlaskForm):
 
 # cli
 
-@app.cli.command()
-@argument('name')
-@argument('password')
 def adduser(name, password):
     with db_session:
         model = UserModel.get(name=name)
@@ -145,8 +144,6 @@ def adduser(name, password):
         UserModel.build(name, password)
 
 
-@app.cli.command()
-@argument('uri_file_path')
 def reset(uri_file_path):
     earliest = datetime.min
     with db_session:
@@ -164,7 +161,6 @@ def reset(uri_file_path):
                        link=feed['feed']['link'])
 
 
-@app.cli.command()
 def update():
     sources_processed = 0
     entries_processed = 0
@@ -201,9 +197,22 @@ def update():
           f'entries added\t{entries_added}', sep='\n')
 
 
+arg = Argument(('name',))
+params = [arg]
+arg = Argument(('password',))
+params.append(arg)
+command = Command('adduser', callback=adduser, params=params)
+app.cli.add_command(command)
+arg = Argument(('uri_file_path',))
+params = [arg]
+command = Command('reset', callback=reset, params=params)
+app.cli.add_command(command)
+command = Command('update', callback=update)
+app.cli.add_command(command)
+
+
 # routes
 
-@app.route('/login', methods=['POST'])
 def login():
     url = url_for('root')
     output = redirect(url)
@@ -229,7 +238,6 @@ def login():
         return output
 
 
-@app.route('/logout')
 @login_required
 def logout():
     name = current_user.name
@@ -240,8 +248,12 @@ def logout():
     return output
 
 
-@app.route('/')
 def root():
     login_form = LoginForm()
     output = render_template('root.html', login_form=login_form)
     return output
+
+
+app.add_url_rule('/', view_func=root)
+app.add_url_rule('/login', view_func=login, methods=['POST'])
+app.add_url_rule('/logout', view_func=logout)
