@@ -7,7 +7,7 @@ from pony.orm import db_session, delete, select
 from database import Entry as EntryModel, Source as SourceModel, User as UserModel
 
 
-def adduser(name, password):
+def add_user(name, password):
     with db_session:
         model = UserModel.get(name=name)
         if model:
@@ -21,15 +21,12 @@ arg = Argument(('name',))
 params = [arg]
 arg = Argument(('password',))
 params.append(arg)
-AddUserCommand = Command('adduser', callback=adduser, params=params)
+AddUserCommand = Command('au', callback=add_user, params=params)
 
 
-def reset(uri_file_path):
+def import_sources(uri_file_path):
     earliest = datetime.min
     with db_session:
-        delete(s for s in SourceModel)
-        delete(e for e in EntryModel)
-
         with open(uri_file_path) as f:
             for line in f:
                 uri = line.strip()
@@ -43,10 +40,10 @@ def reset(uri_file_path):
 
 arg = Argument(('uri_file_path',))
 params = [arg]
-ResetCommand = Command('reset', callback=reset, params=params)
+ResetCommand = Command('is', callback=import_sources, params=params)
 
 
-def update():
+def check_for_updates():
     sources_processed = 0
     entries_processed = 0
     entries_added = 0
@@ -82,4 +79,4 @@ def update():
           f'entries added\t{entries_added}', sep='\n')
 
 
-UpdateCommand = Command('update', callback=update)
+UpdateCommand = Command('up', callback=check_for_updates)
