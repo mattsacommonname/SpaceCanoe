@@ -5,7 +5,7 @@ from pony.orm import set_sql_debug
 from cli import AddUserCommand, ResetCommand, UpdateCommand
 from database import db
 from login import login_manager
-from rest import Entries as EntryResource
+from rest import Entries as EntryResource, Sources as SourceResource, Tags as TagResource
 from routes import login as login_route, logout as logout_route, root as root_route
 
 
@@ -26,6 +26,8 @@ db.generate_mapping(create_tables=True)
 
 api = Api(app)
 api.add_resource(EntryResource, '/entries')
+api.add_resource(SourceResource, '/sources')
+api.add_resource(TagResource, '/tags')
 
 
 # login management

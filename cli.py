@@ -2,9 +2,10 @@ from calendar import timegm
 from click import Argument, Command
 from datetime import datetime
 from feedparser import parse
-from pony.orm import db_session, delete, select
+from pony.orm import db_session, select
+from xml.etree import ElementTree
 
-from database import Entry as EntryModel, Source as SourceModel, User as UserModel
+from database import Entry as EntryModel, Source as SourceModel, Tag as TagModel, User as UserModel
 
 
 def add_user(name, password):
@@ -24,23 +25,58 @@ params.append(arg)
 AddUserCommand = Command('au', callback=add_user, params=params)
 
 
-def import_sources(uri_file_path):
+def process_outline(outline: ElementTree.Element, current_tags: list):
+    attrib = outline.attrib
+
+    outline_type = attrib.get('type')
+    if outline_type is not None and outline_type == 'rss':
+        uri = attrib['xmlUrl']
+
+        source = SourceModel.get(feed_uri=uri)
+        if source is not None:
+            # TODO: add tags
+            return
+
+        feed = parse(uri)
+        print(f'parsing {uri}')
+        SourceModel(feed_uri=uri, label=feed['feed']['title'], last_check=datetime.min, last_fetch=datetime.min,
+                    link=feed['feed']['link'])  # , tags=current_tags)
+
+        return
+
+    text = attrib['text']
+    tag = TagModel.get(label=text)
+    if tag is None:
+        TagModel(label=text)
+
+    if text in current_tags:
+        text = None
+    else:
+        current_tags.append(text)
+
+    for child in outline:
+        process_outline(child, current_tags)
+
+    if text is not None:
+        current_tags.remove(text)
+
+
+def import_opml(opml_path):
     earliest = datetime.min
-    with db_session:
-        with open(uri_file_path) as f:
-            for line in f:
-                uri = line.strip()
-                if not uri:
-                    continue
+    with open(opml_path) as f:
+        tree = ElementTree.parse(f)
 
-                feed = parse(uri)
-                SourceModel(feed_uri=uri, label=feed['feed']['title'], last_check=earliest, last_fetch=earliest,
-                            link=feed['feed']['link'])
+        root = tree.getroot()
+        body = root.find('body')
+
+        with db_session:
+            for outline in body:
+                process_outline(outline, [])
 
 
-arg = Argument(('uri_file_path',))
+arg = Argument(('opml_path',))
 params = [arg]
-ResetCommand = Command('is', callback=import_sources, params=params)
+ResetCommand = Command('io', callback=import_opml, params=params)
 
 
 def check_for_updates():
