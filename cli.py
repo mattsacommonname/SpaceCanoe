@@ -62,7 +62,6 @@ def process_outline(outline: ElementTree.Element, current_tags: list):
 
 
 def import_opml(opml_path):
-    earliest = datetime.min
     with open(opml_path) as f:
         tree = ElementTree.parse(f)
 
