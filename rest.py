@@ -7,7 +7,6 @@ from database import Entry as EntryModel, Source as SourceModel, Tag as TagModel
 
 # entries
 
-
 source_in_entry_fields = {
     'link': fields.String,
     'label': fields.String
@@ -37,7 +36,6 @@ class Entries(Resource):
 
 # sources
 
-
 tag_in_source_fields = {
     'label': fields.String
 }
@@ -66,7 +64,6 @@ class Sources(Resource):
 
 
 # tags
-
 
 tag_fields = {
     'label': fields.String
