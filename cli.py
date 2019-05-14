@@ -34,31 +34,35 @@ def process_outline(outline: ElementTree.Element, current_tags: list):
 
         source = SourceModel.get(feed_uri=uri)
         if source is not None:
-            # TODO: add tags
+            for tag in current_tags:
+                if tag in source.tags:
+                    continue
+
+                source.tags.add(tag)
             return
 
         feed = parse(uri)
         print(f'parsing {uri}')
         SourceModel(feed_uri=uri, label=feed['feed']['title'], last_check=datetime.min, last_fetch=datetime.min,
-                    link=feed['feed']['link'])  # , tags=current_tags)
+                    link=feed['feed']['link'], tags=current_tags)
 
         return
 
     text = attrib['text']
     tag = TagModel.get(label=text)
     if tag is None:
-        TagModel(label=text)
+        tag = TagModel(label=text)
 
-    if text in current_tags:
-        text = None
+    if tag in current_tags:
+        tag = None
     else:
-        current_tags.append(text)
+        current_tags.append(tag)
 
     for child in outline:
         process_outline(child, current_tags)
 
-    if text is not None:
-        current_tags.remove(text)
+    if tag is not None:
+        current_tags.remove(tag)
 
 
 def import_opml(opml_path):
@@ -91,6 +95,9 @@ def check_for_updates():
                 continue
 
             sources_processed += 1
+            now = datetime.now()
+            source.last_check = now
+            source.last_fetch = now
 
             for entry in feed['entries']:
                 # build UTC time
