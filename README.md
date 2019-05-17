@@ -11,26 +11,27 @@ Self-hosted feed reader.
    export FLASK_APP=main
    export FLASK_DEBUG=1
    ```
-3. Reset the database (see Use section).
+3. See the *Use* section.
 
 ## Use
 
-### Reset the database
+### Add a user
 
-`flask reset URIFILEPATH`
-
-`URIFILEPATH` should be the path of a text file that contains urls for a feed, one per line.
-
-Running this will wipe-out all data.
-
-### Fetch and update the entries in the database
-
-`flask update`
-
-Fetches and parses feeds, adding new entries to the database.
+`flask au USERNAME PASSWORD`
 
 ### Run the server
 
 `flask run` 
 
 Runs the flask application.
+
+### Import an OPML file
+
+Browse to the page, click on **Choose File**, then choose an [OPML](http://dev.opml.org/spec2.html#subscriptionLists)
+file. Then click **Upload**.
+
+### Fetch and update the entries in the database
+
+`flask up`
+
+Fetches and parses feeds, adding new entries to the database.
