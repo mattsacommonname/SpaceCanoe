@@ -18,6 +18,16 @@ class User(UserMixin):
         return id_text
 
 
+def add_user(name, password):
+    with db_session:
+        model = UserModel.get(name=name)
+        if model:
+            print(f'User "{name}" already exists.')
+            return
+
+        UserModel.build(name, password)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     with db_session:

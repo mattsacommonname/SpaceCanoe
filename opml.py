@@ -6,27 +6,29 @@ from xml.etree import ElementTree
 from database import Source as SourceModel, Tag as TagModel
 
 
+broken_feed = {
+    'title': 'unknown',
+    'link': 'null'
+}
+
+
+def import_opml(opml_stream):
+    tree = ElementTree.parse(opml_stream)
+
+    root_element = tree.getroot()
+    body = root_element.find('body')
+
+    with db_session:
+        for outline in body:
+            process_outline(outline, [])
+
+
 def process_outline(outline: ElementTree.Element, current_tags: list):
     attrib = outline.attrib
 
     outline_type = attrib.get('type')
     if outline_type is not None and outline_type == 'rss':
-        uri = attrib['xmlUrl']
-
-        source = SourceModel.get(feed_uri=uri)
-        if source is not None:
-            for tag in current_tags:
-                if tag in source.tags:
-                    continue
-
-                source.tags.add(tag)
-            return
-
-        feed = parse(uri)
-        print(f'parsing {uri}')
-        SourceModel(feed_uri=uri, label=feed['feed']['title'], last_check=datetime.min, last_fetch=datetime.min,
-                    link=feed['feed']['link'], tags=current_tags)
-
+        process_rss_outline(attrib, current_tags)
         return
 
     text = attrib['text']
@@ -46,12 +48,26 @@ def process_outline(outline: ElementTree.Element, current_tags: list):
         current_tags.remove(tag)
 
 
-def import_opml(opml_stream):
-    tree = ElementTree.parse(opml_stream)
+def process_rss_outline(attrib, current_tags: list):
+    uri = attrib['xmlUrl']
 
-    root_element = tree.getroot()
-    body = root_element.find('body')
+    source = SourceModel.get(feed_uri=uri)
+    if source is not None:
+        update_source(source, current_tags)
+        return
 
-    with db_session:
-        for outline in body:
-            process_outline(outline, [])
+    feed = parse(uri)
+    feed_info = feed.get('feed', broken_feed)
+    label = feed_info.get('title', broken_feed['title']) or uri
+    link = feed_info.get('link', broken_feed['link']) or uri
+
+    SourceModel(feed_uri=uri, label=label, last_check=datetime.min, last_fetch=datetime.min, link=link,
+                tags=current_tags)
+
+
+def update_source(source: SourceModel, current_tags: list):
+    for tag in current_tags:
+        if tag in current_tags:
+            continue
+
+        source.tags.add(tag)
