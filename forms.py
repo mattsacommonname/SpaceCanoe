@@ -1,6 +1,10 @@
 from flask_wtf import FlaskForm
-from wtforms import FileField, PasswordField, StringField
+from flask_wtf.file import FileAllowed, FileField, FileRequired
+from wtforms import PasswordField, StringField
 from wtforms.validators import DataRequired
+
+
+OPML_FILE_EXTENSIONS = ['opml', 'xml']
 
 
 class LoginForm(FlaskForm):
@@ -9,4 +13,4 @@ class LoginForm(FlaskForm):
 
 
 class OpmlUploadForm(FlaskForm):
-    opml = FileField('OPML File', validators=[DataRequired()])
+    opml = FileField('OPML File', validators=[DataRequired(), FileAllowed(OPML_FILE_EXTENSIONS), FileRequired()])
