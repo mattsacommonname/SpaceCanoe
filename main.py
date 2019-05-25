@@ -27,14 +27,14 @@ from routes import login as login_route, logout as logout_route, root as root_ro
 # application
 
 app = Flask(__name__)
-app.secret_key = b'\x02\x94o\x97\xd4V\x8a\xb0\x91\xa8\x93\x89\x94\x80\xac\x00'
+app.config.from_pyfile('data/config.py')
 
 
 # database
 
-db.bind(provider='sqlite', filename='data/feeds.sqlite', create_db=True)
-set_sql_debug(True)
-db.generate_mapping(create_tables=True)
+db.bind(**app.config['PONY_BINDINGS'])
+set_sql_debug(app.config['DEBUG'])
+db.generate_mapping(**app.config['PONY_MAPPINGS'])
 
 
 # REST API
