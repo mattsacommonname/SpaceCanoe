@@ -13,28 +13,32 @@
 # limitations under the License.
 
 
-from flask_login import login_required
+from flask_login import current_user, login_required
 from flask_restful import fields, marshal, Resource
 from pony.orm import db_session, desc, select
 
-from database import Entry as EntryModel, Source as SourceModel, Tag as TagModel
+from database import Entry as EntryModel, Source as SourceModel, Tag as TagModel, User as UserModel
 
 
 def iterable_tags_attribute(source: SourceModel):
-    tags = source.tags.copy()
+    """Figure out the appropriate tags for this source in relation to the current_user.
+
+    This must be called in a context where
+
+    :param source: The source to pull the tags from.
+    :return: A list of tag models.
+    """
+
+    user = UserModel[current_user.user_id]
+    tags = [t for t in source.tags if t.user == user]
+
     return tags
-
-
-def get_rest_output(model, order, field_definitions):
-    result = select(x for x in model).order_by(order)
-    entries = list(result)
-    output = marshal(entries, field_definitions)
-    return output
 
 
 # entries
 
 source_in_entry_fields = {
+    'id': fields.Integer,
     'link': fields.String,
     'label': fields.String,
     'tags': fields.List(fields.String(attribute='label'), attribute=iterable_tags_attribute)
@@ -42,6 +46,7 @@ source_in_entry_fields = {
 
 
 entry_fields = {
+    'id': fields.Integer,
     'link': fields.String,
     'source': fields.Nested(source_in_entry_fields),
     'summary': fields.String,
@@ -51,24 +56,33 @@ entry_fields = {
 
 
 class Entries(Resource):
+    """REST endpoint for feed entries."""
+
     decorators = [login_required]
 
     @staticmethod
     def get():
+        """Returns all feed entries for sources the logged-in user is subscribed to."""
+
         with db_session:
-            output = get_rest_output(EntryModel, desc(EntryModel.updated), entry_fields)
+            user = UserModel[current_user.user_id]
+            result = select(e for e in EntryModel if user in e.source.users).order_by(desc(EntryModel.updated))
+            entries = list(result)
+            output = marshal(entries, entry_fields)
             return output
 
 
 # sources
 
 tag_in_source_fields = {
+    'id': fields.Integer,
     'label': fields.String
 }
 
 
 source_fields = {
     'feed_uri': fields.String,
+    'id': fields.Integer,
     'label': fields.String,
     'last_check': fields.DateTime,
     'last_fetch': fields.DateTime,
@@ -80,27 +94,42 @@ source_fields = {
 
 
 class Sources(Resource):
+    """REST endpoint for feed sources."""
+
     decorators = [login_required]
 
     @staticmethod
     def get():
+        """Returns all sources the logged-in user is subscribed to."""
+
         with db_session:
-            output = get_rest_output(SourceModel, SourceModel.label, source_fields)
+            user = UserModel[current_user.user_id]
+            result = select(s for s in SourceModel if user in s.users)
+            entries = list(result)
+            output = marshal(entries, source_fields)
             return output
 
 
 # tags
 
 tag_fields = {
+    'id': fields.Integer,
     'label': fields.String
 }
 
 
 class Tags(Resource):
+    """REST endpoint for feed tags."""
+
     decorators = [login_required]
 
     @staticmethod
     def get():
+        """Returns all tags defined by the logged-in user."""
+
         with db_session:
-            output = get_rest_output(TagModel, TagModel.label, tag_fields)
+            user = UserModel[current_user.user_id]
+            result = select(t for t in TagModel if t.user == user).order_by(TagModel.label)
+            entries = list(result)
+            output = marshal(entries, tag_fields)
             return output

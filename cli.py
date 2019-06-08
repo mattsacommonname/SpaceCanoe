@@ -15,7 +15,7 @@
 
 from click import Argument, Command
 
-from feeds import check_for_updates
+from feeds import update_feeds
 from login import add_user
 
 
@@ -31,7 +31,7 @@ AddUserCommand = Command('au', callback=add_user_command, params=params)
 
 
 def check_for_updates_command():
-    check_for_updates()
+    update_feeds()
 
 
 UpdateCommand = Command('up', callback=check_for_updates_command)

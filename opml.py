@@ -16,73 +16,119 @@
 from datetime import datetime
 from feedparser import parse
 from pony.orm import db_session
+from uuid import UUID
 from xml.etree import ElementTree
 
-from database import Source as SourceModel, Tag as TagModel
+from database import Source as SourceModel, Tag as TagModel, User as UserModel
 
 
-broken_feed = {
-    'title': 'unknown',
-    'link': 'null'
-}
+def import_opml(opml_stream, user_id: UUID):
+    """Imports the tags and feeds from an OPML file.
 
+    :param opml_stream: A file stream containing an OPML file.
+    :param user_id: The id of the user importing the file.
+    """
 
-def import_opml(opml_stream):
+    # get the body element from the stream
     tree = ElementTree.parse(opml_stream)
-
     root_element = tree.getroot()
     body = root_element.find('body')
 
     with db_session:
+        user = UserModel[user_id]
+
+        # recursively iterate through the outlines
         for outline in body:
-            process_outline(outline, [])
+            process_outline(outline, [], user)
 
 
-def process_outline(outline: ElementTree.Element, current_tags: list):
+def process_outline(outline: ElementTree.Element, current_tags: list, user: UserModel):
+    """Processes an OPML outline element. Feed elements will be added or updated as necessary, and child tags will be
+    recursively processed.
+
+    :param outline: The outline element to process
+    :param current_tags: Current tags in this branch of the XML tree
+    :param user: The user importing these feeds & tags
+    """
+
+    # get the attributes out of the outline
     attrib = outline.attrib
 
+    # is this a feed?
     outline_type = attrib.get('type')
     if outline_type is not None and outline_type == 'rss':
-        process_rss_outline(attrib, current_tags)
+        process_feed_outline(attrib, current_tags, user)
         return
 
+    # if this isn't a feed, it's a tag
     text = attrib['text']
-    tag = TagModel.get(label=text)
+    tag = TagModel.get(label=text, user=user)
     if tag is None:
-        tag = TagModel(label=text)
+        tag = TagModel(label=text, user=user)
 
+    # tags can be child elements of other tags (thanks OPML), so if this tag isn't already in the list of tags, add it
+    # also need to remember if this branch of the XML tree already has this tag, so we don't remove it prematurely
     if tag in current_tags:
         tag = None
     else:
         current_tags.append(tag)
 
+    # process child outlines
     for child in outline:
-        process_outline(child, current_tags)
+        process_outline(child, current_tags, user)
 
+    # remove the tag if this was the outermost instance of the tag
     if tag is not None:
         current_tags.remove(tag)
 
 
-def process_rss_outline(attrib, current_tags: list):
+def process_feed_outline(attrib, current_tags: list, user: UserModel):
+    """Process a feed from an OPML outline element.
+
+    :param attrib: OPML outline attributes for a feed
+    :param current_tags: Current tags to associate to feed
+    :param user: User importing this feed
+    """
+
+    # get address of feed
     uri = attrib['xmlUrl']
 
+    # check if source already exists for feed, update if it does
     source = SourceModel.get(feed_uri=uri)
     if source is not None:
-        update_source(source, current_tags)
+        update_source_tags_and_users(source, current_tags, user)
         return
 
+    # download & parse feed
     feed = parse(uri)
-    feed_info = feed.get('feed', broken_feed)
-    label = feed_info.get('title', broken_feed['title']) or uri
-    link = feed_info.get('link', broken_feed['link']) or uri
 
-    SourceModel(feed_uri=uri, label=label, last_check=datetime.min, last_fetch=datetime.min, link=link,
-                tags=current_tags)
+    # get feed info or defaults
+    feed_info = feed.get('feed', {})
+    label = feed_info.get('title', uri)
+    link = feed_info.get('link', uri)
+
+    # build source
+    SourceModel(feed_uri=uri, fetched_label=label, last_check=datetime.min, last_fetch=datetime.min, link=link,
+                tags=current_tags, users=[user])
 
 
-def update_source(source: SourceModel, current_tags: list):
+def update_source_tags_and_users(source: SourceModel, current_tags: list, user: UserModel):
+    """Make sure that the source's tag and user sets contain the passed tags and user.
+
+    :param source: Source model to be updated
+    :param current_tags: Current tags to union into the source's tags
+    :param user: User importing this feed, to be added if not already in set of users
+    """
+
+    # add tags not currently in the set
     for tag in current_tags:
-        if tag in current_tags:
+        if tag in source.tags:
             continue
 
         source.tags.add(tag)
+
+    # add the current user if not already in the set
+    if user in source.users:
+        return
+
+    source.users.add(user)

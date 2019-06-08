@@ -75,5 +75,5 @@ def upload_opml():
         flash('Form bad')
         return output
 
-    import_opml(form.opml.data.stream)
+    import_opml(form.opml.data.stream, current_user.user_id)
     return output
