@@ -66,7 +66,7 @@ class Entries(Resource):
 
         with db_session:
             user = UserModel[current_user.user_id]
-            result = select(e for e in EntryModel if user in e.source.users).order_by(desc(EntryModel.updated))
+            result = select(e for e in EntryModel if e.source in user.sources).order_by(desc(EntryModel.updated))
             entries = list(result)
             output = marshal(entries, entry_fields)
             return output
@@ -104,9 +104,8 @@ class Sources(Resource):
 
         with db_session:
             user = UserModel[current_user.user_id]
-            result = select(s for s in SourceModel if user in s.users)
-            entries = list(result)
-            output = marshal(entries, source_fields)
+            sources = list(user.sources)
+            output = marshal(sources, source_fields)
             return output
 
 
@@ -129,7 +128,6 @@ class Tags(Resource):
 
         with db_session:
             user = UserModel[current_user.user_id]
-            result = select(t for t in TagModel if t.user == user).order_by(TagModel.label)
-            entries = list(result)
-            output = marshal(entries, tag_fields)
+            tags = list(user.tags)
+            output = marshal(tags, tag_fields)
             return output
