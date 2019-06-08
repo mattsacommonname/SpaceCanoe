@@ -33,13 +33,15 @@ limitations under the License.
     {% endwith %}
     {% if current_user.is_authenticated %}
         <div>
-            <a href="/logout">logout</a>
+            {{ current_user.name }} <a href="/logout">logout</a>
         </div>
         <div>
             <form method="post" enctype="multipart/form-data" action="{{ url_for('upload_opml') }}">
                 {{ opml_upload_form.hidden_tag() }}
-                <div>{{ opml_upload_form.opml.label }}{{ opml_upload_form.opml() }}</div>
-                <div><input type="submit" value="Upload"></div>
+                <fieldset>
+                    {{ opml_upload_form.opml.label }}{{ opml_upload_form.opml() }}
+                    <input type="submit" value="Upload">
+                </fieldset>
             </form>
         </div>
         <div id="entries-table">Loading...</div>
