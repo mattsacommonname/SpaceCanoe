@@ -9,6 +9,7 @@ Self-hosted feed reader.
    ```
    pip install -r requirements.txt
    export FLASK_APP=main
+   export FLASK_DEBUG=1
    ```
 3. Copy `defaultconfig.py` to `data/config.py`. Edit the values as necessary. At least change the `SECRET_KEY`.
 4. See the *Use* section.
