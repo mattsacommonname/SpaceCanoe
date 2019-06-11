@@ -21,7 +21,8 @@ from cli import AddUserCommand, UpdateCommand
 from database import db
 from login import login_manager
 from rest import Entries as EntryResource, Sources as SourceResource, Tags as TagResource
-from routes import login as login_route, logout as logout_route, root as root_route, upload_opml as upload_opml_route
+from routes import add_feed as add_feed_route, login as login_route, logout as logout_route, root as root_route,\
+    upload_opml as upload_opml_route
 
 
 # application
@@ -59,6 +60,7 @@ app.cli.add_command(UpdateCommand)
 # routes
 
 app.add_url_rule('/', view_func=root_route)
-app.add_url_rule('/upload_opml', view_func=upload_opml_route, methods=['POST'])
+app.add_url_rule('/add_form', view_func=add_feed_route, methods=['POST'])
 app.add_url_rule('/login', view_func=login_route, methods=['POST'])
 app.add_url_rule('/logout', view_func=logout_route)
+app.add_url_rule('/upload_opml', view_func=upload_opml_route, methods=['POST'])

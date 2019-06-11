@@ -36,6 +36,15 @@ limitations under the License.
             {{ current_user.name }} <a href="/logout">logout</a>
         </div>
         <div>
+            <form method="post" action="{{ url_for('add_feed') }}">
+                {{ add_feed_form.hidden_tag() }}
+                <fieldset>
+                    {{ add_feed_form.url.label}}{{ add_feed_form.url() }}
+                    <input type="submit" value="Add Feed">
+                </fieldset>
+            </form>
+        </div>
+        <div>
             <form method="post" enctype="multipart/form-data" action="{{ url_for('upload_opml') }}">
                 {{ opml_upload_form.hidden_tag() }}
                 <fieldset>

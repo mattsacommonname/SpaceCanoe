@@ -20,7 +20,34 @@ from pony.orm import db_session, select
 from time import struct_time
 from typing import List
 
-from database import Entry as EntryModel, Source as SourceModel
+from database import Entry as EntryModel, Source as SourceModel, Tag as TagModel, User as UserModel
+
+
+def fetch_and_parse_feed(url: str, tags: List[TagModel], user: UserModel) -> None:
+    """Fetches a feed from the given URL, parses it, adds a source if necessary, updates one if it already exists.
+
+    :param url: The URL of the feed.
+    :param tags: Tags to add to the source.
+    :param user: User adding/updating this feed.
+    """
+
+    # check if source already exists for feed, update if it does
+    source = SourceModel.get(feed_uri=url)
+    if source is not None:
+        update_source_tags_and_users(source, tags, user)
+        return
+
+    # download & parse feed
+    feed = parse(url)
+
+    # get feed info or defaults
+    feed_info = feed.get('feed', {})
+    label = feed_info.get('title', url)
+    link = feed_info.get('link', url)
+
+    # build source
+    SourceModel(feed_uri=url, fetched_label=label, last_check=datetime.min, last_fetch=datetime.min, link=link,
+                tags=tags, users=[user])
 
 
 def utc_timestamp_from_struct_time(parsed_time: struct_time) -> datetime:
@@ -90,3 +117,25 @@ def update_feeds() -> None:
 
             # check for and process new entries
             process_entries(feed['entries'], source)
+
+
+def update_source_tags_and_users(source: SourceModel, current_tags: list, user: UserModel) -> None:
+    """Make sure that the source's tag and user sets contain the passed tags and user.
+
+    :param source: Source model to be updated
+    :param current_tags: Current tags to union into the source's tags
+    :param user: User importing this feed, to be added if not already in set of users
+    """
+
+    # add tags not currently in the set
+    for tag in current_tags:
+        if tag in source.tags:
+            continue
+
+        source.tags.add(tag)
+
+    # add the current user if not already in the set
+    if user in source.users:
+        return
+
+    source.users.add(user)

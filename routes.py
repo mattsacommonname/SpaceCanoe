@@ -20,9 +20,35 @@ from werkzeug.security import check_password_hash
 from werkzeug.wrappers.response import Response
 
 from database import User as UserModel
-from forms import LoginForm, OpmlUploadForm
+from feeds import fetch_and_parse_feed
+from forms import AddFeedForm, LoginForm, OpmlUploadForm
 from login import User
 from opml import import_opml
+
+
+def add_feed() -> Response:
+    """Add feed route. Takes a URL, tries to fetch it as a feed, then adding or updating a source for that feed as
+    necessary.
+
+    :return: A redirect to the landing page.
+    """
+
+    # build the redirect, regardless of the result, we're currently always redirecting to the landing
+    url = url_for('root')
+    output = redirect(url)
+
+    # validate form data
+    form = AddFeedForm()
+    if not form.validate_on_submit():
+        flash('Invalid feed.', 'error')
+        return output
+
+    url = form.url.data
+    with db_session:
+        user = UserModel[current_user.user_id]
+        fetch_and_parse_feed(url, [], user)
+
+    return output
 
 
 def login() -> Response:
@@ -31,7 +57,7 @@ def login() -> Response:
     :return: A redirect to the landing page.
     """
 
-    # build the redirect, reguardless of the result, we're currently always redirecting to the landing
+    # build the redirect, regardless of the result, we're currently always redirecting to the landing
     url = url_for('root')
     output = redirect(url)
 
@@ -80,9 +106,12 @@ def root() -> str:
     :return: A string of the rendered page.
     """
 
-    login_form = LoginForm()
-    opml_upload_form = OpmlUploadForm()
-    output = render_template('root.html', login_form=login_form, opml_upload_form=opml_upload_form)
+    context = {
+        'add_feed_form': AddFeedForm(),
+        'login_form': LoginForm(),
+        'opml_upload_form': OpmlUploadForm()
+    }
+    output = render_template('root.html', **context)
     return output
 
 

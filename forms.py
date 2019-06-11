@@ -16,10 +16,16 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField, FileRequired
 from wtforms import PasswordField, StringField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, URL
 
 
 OPML_FILE_EXTENSIONS = ['opml', 'xml']
+
+
+class AddFeedForm(FlaskForm):
+    """Add feed to sources form."""
+
+    url = StringField('Feed URL', validators=[DataRequired(), URL()])
 
 
 class LoginForm(FlaskForm):
