@@ -62,6 +62,9 @@ limitations under the License.
                             <td class="meta-info">
                                 <a href="{{ source.link }}">{{ source.label }}</a>
                             </td>
+                            <td>
+                                {{#each source.tags}}{{#unless @first}}, {{/unless}}{{ this }}{{/each}}
+                            </td>
                             <td class="meta-info">{{ updated }}</td>
                             <td class="meta-info">
                                 <a href="{{ link }}">{{ title }}</a>
