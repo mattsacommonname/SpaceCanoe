@@ -46,7 +46,7 @@ class Source(db.Entity):
     users = Set('User')
 
     @property
-    def label(self):
+    def label(self) -> str:
         """Returns the display label for the source.
 
         If there's a user-defined label, uses that, otherwise uses the label fetched from the feed.
@@ -76,8 +76,8 @@ class User(db.Entity):
     tags = Set(Tag)
 
     @classmethod
-    def build(cls, name, password):
-        """Generate a user with a password.
+    def build(cls, name: str, password: str) -> 'User':
+        """Generate a user with a properly hashed password.
 
         :param name: Username to use.
         :param password: Plaintext password.

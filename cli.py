@@ -19,7 +19,12 @@ from feeds import update_feeds
 from login import add_user
 
 
-def add_user_command(name, password):
+def add_user_command(name: str, password: str) -> None:
+    """Wrapper function for add user command.
+
+    :param name: The new user name.
+    :param password: The plaintext password.
+    """
     add_user(name, password)
 
 
@@ -30,7 +35,9 @@ params.append(arg)
 AddUserCommand = Command('au', callback=add_user_command, params=params)
 
 
-def check_for_updates_command():
+def check_for_updates_command() -> None:
+    """Wrapper function for feed update command."""
+
     update_feeds()
 
 

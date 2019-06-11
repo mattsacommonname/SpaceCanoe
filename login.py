@@ -15,6 +15,7 @@
 
 from flask_login import LoginManager, UserMixin
 from pony.orm import db_session
+from typing import Optional
 from uuid import UUID
 
 from database import User as UserModel
@@ -24,31 +25,60 @@ login_manager = LoginManager()
 
 
 class User(UserMixin):
+    """User object."""
+
     def __init__(self, user_id: UUID, name: str):
+        """Constructor.
+
+        :param user_id: The user's UUID.
+        :param name: The user's name.
+        """
+
         self.user_id = user_id
         self.name = name
 
-    def get_id(self):
+    def get_id(self) -> str:
+        """Get's the user's UUID as a string.
+
+        :return: The user's UUID in a string format.
+        """
+
         id_text = str(self.user_id)
         return id_text
 
 
-def add_user(name, password):
+def add_user(name: str, password: str) -> None:
+    """Adds a user to the database.
+
+    :param name: Name of the user.
+    :param password: Plaintext password.
+    """
+
     with db_session:
+        # check if the user exists
         model = UserModel.get(name=name)
         if model:
             print(f'User "{name}" already exists.')
             return
 
+        # create the user
         UserModel.build(name, password)
 
 
 @login_manager.user_loader
-def load_user(user_id):
+def load_user(user_id: str) -> Optional[User]:
+    """Login manager user loader callback. Attempts to find the user from the passed id.
+
+    :param user_id: A string of a user ID. This will need to be parsable as a UUID.
+    :return: The user if it's found. None if no matching user found.
+    """
+
+    user_uuid = UUID(user_id)
+
     with db_session:
-        model = UserModel[user_id]
+        model = UserModel[user_uuid]
         if not model:
-            return None
+            return None  # no matching user found
 
         user = User(model.user_id, model.name)
         return user

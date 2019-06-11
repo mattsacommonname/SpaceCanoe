@@ -22,7 +22,8 @@ from xml.etree import ElementTree
 from database import Source as SourceModel, Tag as TagModel, User as UserModel
 
 
-def import_opml(opml_stream, user_id: UUID):
+# TODO: Figure out proper type hint for opml_stream
+def import_opml(opml_stream, user_id: UUID) -> None:
     """Imports the tags and feeds from an OPML file.
 
     :param opml_stream: A file stream containing an OPML file.
@@ -42,7 +43,7 @@ def import_opml(opml_stream, user_id: UUID):
             process_outline(outline, [], user)
 
 
-def process_outline(outline: ElementTree.Element, current_tags: list, user: UserModel):
+def process_outline(outline: ElementTree.Element, current_tags: list, user: UserModel) -> None:
     """Processes an OPML outline element. Feed elements will be added or updated as necessary, and child tags will be
     recursively processed.
 
@@ -82,7 +83,7 @@ def process_outline(outline: ElementTree.Element, current_tags: list, user: User
         current_tags.remove(tag)
 
 
-def process_feed_outline(attrib, current_tags: list, user: UserModel):
+def process_feed_outline(attrib: dict, current_tags: list, user: UserModel) -> None:
     """Process a feed from an OPML outline element.
 
     :param attrib: OPML outline attributes for a feed
@@ -112,7 +113,7 @@ def process_feed_outline(attrib, current_tags: list, user: UserModel):
                 tags=current_tags, users=[user])
 
 
-def update_source_tags_and_users(source: SourceModel, current_tags: list, user: UserModel):
+def update_source_tags_and_users(source: SourceModel, current_tags: list, user: UserModel) -> None:
     """Make sure that the source's tag and user sets contain the passed tags and user.
 
     :param source: Source model to be updated

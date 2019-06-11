@@ -13,14 +13,16 @@
 # limitations under the License.
 
 
+from collections import OrderedDict
 from flask_login import current_user, login_required
 from flask_restful import fields, marshal, Resource
 from pony.orm import db_session, desc, select
+from typing import List
 
 from database import Entry as EntryModel, Source as SourceModel, Tag as TagModel, User as UserModel
 
 
-def iterable_tags_attribute(source: SourceModel):
+def iterable_tags_attribute(source: SourceModel) -> List[TagModel]:
     """Figure out the appropriate tags for this source in relation to the current_user.
 
     This must be called in a context where
@@ -61,13 +63,19 @@ class Entries(Resource):
     decorators = [login_required]
 
     @staticmethod
-    def get():
-        """Returns all feed entries for sources the logged-in user is subscribed to."""
+    def get() -> List[OrderedDict]:
+        """Returns all feed entries for sources the logged-in user is subscribed to.
+
+        :return: The entries, as a list of JSON-serializable dicts.
+        """
 
         with db_session:
+            # get a list of entries from sources of feeds followed by the logged-in user
             user = UserModel[current_user.user_id]
             result = select(e for e in EntryModel if e.source in user.sources).order_by(desc(EntryModel.updated))
             entries = list(result)
+
+            # marshall them to JSON-serializable dicts
             output = marshal(entries, entry_fields)
             return output
 
@@ -99,12 +107,18 @@ class Sources(Resource):
     decorators = [login_required]
 
     @staticmethod
-    def get():
-        """Returns all sources the logged-in user is subscribed to."""
+    def get() -> List[OrderedDict]:
+        """Returns all sources the logged-in user is subscribed to.
+
+        :return: The sources, as a list of JSON-serializable dicts.
+        """
 
         with db_session:
+            # get a list of sources followed by the logged-in user
             user = UserModel[current_user.user_id]
             sources = list(user.sources)
+
+            # marshall them to JSON-serializable dicts
             output = marshal(sources, source_fields)
             return output
 
@@ -123,11 +137,17 @@ class Tags(Resource):
     decorators = [login_required]
 
     @staticmethod
-    def get():
-        """Returns all tags defined by the logged-in user."""
+    def get() -> List[OrderedDict]:
+        """Returns all tags defined by the logged-in user.
+
+        :return: The tags, as a list of JSON-serializable dicts.
+        """
 
         with db_session:
+            # get tags from the user
             user = UserModel[current_user.user_id]
             tags = list(user.tags)
+
+            # marshall them to JSON-serializable dicts
             output = marshal(tags, tag_fields)
             return output

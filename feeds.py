@@ -15,28 +15,31 @@
 
 from calendar import timegm
 from datetime import datetime
-from feedparser import parse
+from feedparser import parse, FeedParserDict
 from pony.orm import db_session, select
+from time import struct_time
+from typing import List
 
 from database import Entry as EntryModel, Source as SourceModel
 
 
-def utc_timestamp_from_tuple(parsed_tuple: tuple):
-    """Generates a date & time in UTC given a date & time tuple.
+def utc_timestamp_from_struct_time(parsed_time: struct_time) -> datetime:
+    """Generates a date & time in UTC given a struct_time.
 
-    :param parsed_tuple: A date-time tuple in the format (, )
+    :param parsed_time: A date-time tuple in the format (year, month, day, hour, minute, second).
     :return: A datetime object in UTC.
     """
 
-    if not parsed_tuple:
+    # give minimum valid time
+    if not parsed_time:
         return datetime.min
 
-    timestamp = timegm(parsed_tuple)
+    timestamp = timegm(parsed_time)
     utc_datetime = datetime.utcfromtimestamp(timestamp)
     return utc_datetime
 
 
-def process_entries(entries, source: SourceModel):
+def process_entries(entries: List[FeedParserDict], source: SourceModel) -> None:
     """Iterate through entries (presumably from a feed), add the new ones to the database.
 
     :param entries: The entries from the feed.
@@ -46,7 +49,7 @@ def process_entries(entries, source: SourceModel):
     for entry in entries:
         # build UTC time
         updated_parsed = entry.get('updated_parsed', None)
-        updated = utc_timestamp_from_tuple(updated_parsed)
+        updated = utc_timestamp_from_struct_time(updated_parsed)
 
         link = entry.get('link', None)
         if not link:  # no point to an entry without a link
@@ -64,7 +67,7 @@ def process_entries(entries, source: SourceModel):
         EntryModel(link=link, source=source, summary=summary, title=title, updated=updated)
 
 
-def update_feeds():
+def update_feeds() -> None:
     """Checks all sources for feed updates."""
 
     with db_session:
@@ -80,9 +83,8 @@ def update_feeds():
             if feed['bozo']:
                 continue
 
-            # update with new data
+            # update with new data, if we have any; use the old data otherwise
             label = source.fetched_label
-            # source.fetched_label = feed[''] or label
             source.fetched_label = feed.get('feed', {}).get('title', label)
             source.last_fetch = now
 

@@ -23,9 +23,13 @@ OPML_FILE_EXTENSIONS = ['opml', 'xml']
 
 
 class LoginForm(FlaskForm):
+    """User login form."""
+
     name = StringField('User name', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
 
 
 class OpmlUploadForm(FlaskForm):
+    """OPML file upload form."""
+
     opml = FileField('OPML File', validators=[DataRequired(), FileAllowed(OPML_FILE_EXTENSIONS), FileRequired()])
