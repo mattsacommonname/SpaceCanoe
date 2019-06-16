@@ -20,10 +20,11 @@ from pony.orm import db_session, select
 from time import struct_time
 from typing import List
 
-from database import Entry as EntryModel, Source as SourceModel, Tag as TagModel, User as UserModel
+from database import Entry as EntryModel, Source as SourceModel, SourceUserData as SourceUserDataModel,\
+    Tag as TagModel, User as UserModel
 
 
-def fetch_and_parse_feed(url: str, tags: List[TagModel], user: UserModel) -> None:
+def fetch_and_store_feed(url: str, tags: List[TagModel], user: UserModel) -> None:
     """Fetches a feed from the given URL, parses it, adds a source if necessary, updates one if it already exists.
 
     :param url: The URL of the feed.
@@ -31,13 +32,27 @@ def fetch_and_parse_feed(url: str, tags: List[TagModel], user: UserModel) -> Non
     :param user: User adding/updating this feed.
     """
 
-    # check if source already exists for feed, update if it does
-    source = SourceModel.get(feed_uri=url)
-    if source is not None:
-        update_source_tags_and_users(source, tags, user)
+    source = get_or_build_source(url)
+
+    user_data = SourceUserDataModel.get(user=user, source=source)
+    if user_data is not None:
+        update_tags(user_data, tags)
         return
 
-    # download & parse feed
+    SourceUserDataModel(source=source, tags=tags, user=user)
+
+
+def get_or_build_source(url: str) -> SourceModel:
+    """Retrieves an already stored source, or build one from the feed data and stores it.
+
+    :param url: URL of the feed.
+    :return: The retrieved/built source.
+    """
+
+    source = SourceModel.get(feed_uri=url)
+    if source is not None:
+        return source
+
     feed = parse(url)
 
     # get feed info or defaults
@@ -45,9 +60,8 @@ def fetch_and_parse_feed(url: str, tags: List[TagModel], user: UserModel) -> Non
     label = feed_info.get('title', url)
     link = feed_info.get('link', url)
 
-    # build source
-    SourceModel(feed_uri=url, fetched_label=label, last_check=datetime.min, last_fetch=datetime.min, link=link,
-                tags=tags, users=[user])
+    source = SourceModel(feed_uri=url, fetched_label=label, last_check=datetime.min, last_fetch=datetime.min, link=link)
+    return source
 
 
 def utc_timestamp_from_struct_time(parsed_time: struct_time) -> datetime:
@@ -119,23 +133,16 @@ def update_feeds() -> None:
             process_entries(feed['entries'], source)
 
 
-def update_source_tags_and_users(source: SourceModel, current_tags: list, user: UserModel) -> None:
-    """Make sure that the source's tag and user sets contain the passed tags and user.
+def update_tags(user_data: SourceUserDataModel, tags: List[TagModel]) -> None:
+    """Add any tags missing from the source user data's tag.
 
-    :param source: Source model to be updated
-    :param current_tags: Current tags to union into the source's tags
-    :param user: User importing this feed, to be added if not already in set of users
+    :param user_data: The source user data to update.
+    :param tags: Collection of tags to add.
     """
 
     # add tags not currently in the set
-    for tag in current_tags:
-        if tag in source.tags:
+    for tag in tags:
+        if tag in user_data.tags:
             continue
 
-        source.tags.add(tag)
-
-    # add the current user if not already in the set
-    if user in source.users:
-        return
-
-    source.users.add(user)
+        user_data.tags.add(tag)

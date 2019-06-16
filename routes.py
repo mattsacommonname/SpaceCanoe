@@ -20,7 +20,7 @@ from werkzeug.security import check_password_hash
 from werkzeug.wrappers.response import Response
 
 from database import User as UserModel
-from feeds import fetch_and_parse_feed
+from feeds import fetch_and_store_feed
 from forms import AddFeedForm, LoginForm, OpmlUploadForm
 from login import User
 from opml import import_opml
@@ -46,7 +46,7 @@ def add_feed() -> Response:
     url = form.url.data
     with db_session:
         user = UserModel[current_user.user_id]
-        fetch_and_parse_feed(url, [], user)
+        fetch_and_store_feed(url, [], user)
 
     return output
 

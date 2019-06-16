@@ -19,38 +19,36 @@ from flask_restful import fields, marshal, Resource
 from pony.orm import db_session, desc, select
 from typing import List
 
-from database import Entry as EntryModel, Source as SourceModel, Tag as TagModel, User as UserModel
+from database import Entry as EntryModel, SourceUserData as SourceUserDataModel, Tag as TagModel, User as UserModel
 
 
-def iterable_tags_attribute(source: SourceModel) -> List[TagModel]:
-    """Figure out the appropriate tags for this source in relation to the current_user.
+def get_user_data_for_entry(entry: EntryModel) -> SourceUserDataModel:
+    """Gets the source user data for the given entry's source and the logged-in user.
 
-    This must be called in a context where
-
-    :param source: The source to pull the tags from.
-    :return: A list of tag models.
+    :param entry: The entry who's source we're looking up.
+    :return: The related source user data.
     """
 
     user = UserModel[current_user.user_id]
-    tags = [t for t in source.tags if t.user == user]
+    user_data = SourceUserDataModel.get(source=entry.source, user=user)
 
-    return tags
+    return user_data
 
 
 # entries
 
 source_in_entry_fields = {
-    'id': fields.Integer,
-    'link': fields.String,
+    'id': fields.Integer(attribute='source.id'),
+    'link': fields.String(attribute='source.link'),
     'label': fields.String,
-    'tags': fields.List(fields.String(attribute='label'), attribute=iterable_tags_attribute)
+    'tags': fields.List(fields.String(attribute='label'))
 }
 
 
 entry_fields = {
     'id': fields.Integer,
     'link': fields.String,
-    'source': fields.Nested(source_in_entry_fields),
+    'source': fields.Nested(source_in_entry_fields, attribute=get_user_data_for_entry),
     'summary': fields.String,
     'title': fields.String,
     'updated': fields.DateTime
@@ -72,7 +70,8 @@ class Entries(Resource):
         with db_session:
             # get a list of entries from sources of feeds followed by the logged-in user
             user = UserModel[current_user.user_id]
-            result = select(e for e in EntryModel if e.source in user.sources).order_by(desc(EntryModel.updated))
+            sources = select(s.source for s in user.sources)
+            result = select(e for e in EntryModel if e.source in sources).order_by(desc(EntryModel.updated))
             entries = list(result)
 
             # marshall them to JSON-serializable dicts
@@ -89,15 +88,15 @@ tag_in_source_fields = {
 
 
 source_fields = {
-    'feed_uri': fields.String,
-    'id': fields.Integer,
+    'feed_uri': fields.String(attribute='source.feed_uri'),
+    'id': fields.Integer(attribute='source.id'),
     'label': fields.String,
-    'last_check': fields.DateTime,
-    'last_fetch': fields.DateTime,
-    'link': fields.String,
+    'last_check': fields.DateTime(attribute='source.last_check'),
+    'last_fetch': fields.DateTime(attribute='source.last_fetch'),
+    'link': fields.String(attribute='source.link'),
     # TODO: pick one tag field
-    'tag_labels': fields.List(fields.String(attribute='label'), attribute=iterable_tags_attribute),
-    'tag_objects': fields.List(fields.Nested(tag_in_source_fields), attribute=iterable_tags_attribute)
+    'tag_labels': fields.List(fields.String(attribute='label')),
+    'tag_objects': fields.List(fields.Nested(tag_in_source_fields))
 }
 
 

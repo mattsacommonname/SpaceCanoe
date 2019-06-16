@@ -18,7 +18,7 @@ from uuid import UUID
 from xml.etree import ElementTree
 
 from database import Tag as TagModel, User as UserModel
-from feeds import fetch_and_parse_feed
+from feeds import fetch_and_store_feed
 
 
 # TODO: Figure out proper type hint for opml_stream
@@ -58,7 +58,7 @@ def process_outline(outline: ElementTree.Element, current_tags: list, user: User
     outline_type = attrib.get('type')
     if outline_type is not None and outline_type == 'rss':
         url = attrib.get('xmlUrl')
-        fetch_and_parse_feed(url, current_tags, user)
+        fetch_and_store_feed(url, current_tags, user)
         return
 
     # if this isn't a feed, it's a tag

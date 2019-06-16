@@ -41,9 +41,17 @@ class Source(db.Entity):
     last_check = Required(datetime)
     last_fetch = Required(datetime)
     link = Required(str)
+    user_data = Set('SourceUserData')
+
+
+class SourceUserData(db.Entity):
+    """User-specific data for feed sources."""
+
+    source = Required(Source)
     tags = Set('Tag')
+    user = Required('User')
     user_label = Optional(str)
-    users = Set('User')
+    composite_key(source, user)
 
     @property
     def label(self) -> str:
@@ -54,14 +62,14 @@ class Source(db.Entity):
         :return: A string of the display label.
         """
 
-        return self.user_label or self.fetched_label
+        return self.user_label or self.source.fetched_label
 
 
 class Tag(db.Entity):
     """Organizational tag for feed sources."""
 
     label = Required(str)
-    sources = Set(Source)
+    sources = Set(SourceUserData)
     user = Required('User')
     composite_key(label, user)
 
@@ -72,7 +80,7 @@ class User(db.Entity):
     user_id = PrimaryKey(UUID, default=uuid4)
     name = Required(str, unique=True)
     password_hash = Required(str)
-    sources = Set(Source)
+    sources = Set(SourceUserData)
     tags = Set(Tag)
 
     @classmethod
