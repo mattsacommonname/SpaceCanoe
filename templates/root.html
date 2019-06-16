@@ -34,24 +34,56 @@ limitations under the License.
     {% if current_user.is_authenticated %}
         <div>
             {{ current_user.name }} <a href="/logout">logout</a>
+            <button class="btn btn-primary" data-target="#addFeedModal" data-toggle="modal" type="button">
+                Add Feed
+            </button>
+            <button class="btn btn-primary" data-target="#uploadOpmlModal" data-toggle="modal" type="button">
+                Upload OPML
+            </button>
         </div>
-        <div>
-            <form method="post" action="{{ url_for('add_feed') }}">
-                {{ add_feed_form.hidden_tag() }}
-                <fieldset>
-                    {{ add_feed_form.url.label}}{{ add_feed_form.url() }}
-                    <input type="submit" value="Add Feed">
-                </fieldset>
-            </form>
+        <div aria-hidden="true" aria-labelledby="addFeedModalLabel" class="modal" id="addFeedModal" role="dialog" tabindex="-1">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addFeedModalLabel">Add Feed</h5>
+                        <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form method="post" action="{{ url_for('add_feed') }}">
+                        {{ add_feed_form.hidden_tag() }}
+                        <div class="modal-body">
+                            {{ add_feed_form.url.label}}
+                            {{ add_feed_form.url() }}
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" type="submit">Add Feed</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div>
-            <form method="post" enctype="multipart/form-data" action="{{ url_for('upload_opml') }}">
-                {{ opml_upload_form.hidden_tag() }}
-                <fieldset>
-                    {{ opml_upload_form.opml.label }}{{ opml_upload_form.opml() }}
-                    <input type="submit" value="Upload">
-                </fieldset>
-            </form>
+        <div aria-hidden="true" aria-labelledby="uploadOpmlModalLabel" class="modal" id="uploadOpmlModal" role="dialog" tabindex="-1">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="uploadOpmlModalLabel">Upload OPML</h5>
+                        <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form action="{{ url_for('upload_opml') }}" enctype="multipart/form-data" method="post">
+                        {{ opml_upload_form.hidden_tag() }}
+                        <div class="modal-body">
+                            {{ opml_upload_form.opml.label }}
+                            {{ opml_upload_form.opml() }}
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" type="submit">Upload</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
         <div id="entries-table">Loading...</div>
         {% raw %}
