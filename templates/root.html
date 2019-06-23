@@ -100,17 +100,27 @@ limitations under the License.
                 <table class="table table-striped table-dark table-sm">
                     {{#each this}}
                         <tr>
-                            <td class="meta-info">
+                            <td>
                                 <a href="{{ source.link }}">{{ source.label }}</a>
                             </td>
                             <td>
                                 {{#each source.tags}}{{#unless @first}}, {{/unless}}{{ this }}{{/each}}
                             </td>
-                            <td class="meta-info">{{ updated }}</td>
-                            <td class="meta-info">
+                            <td>{{ updated }}</td>
+                            <td>
                                 <a href="{{ link }}">{{ title }}</a>
                             </td>
-                            <td>{{ summary }}</td>
+                            <td>
+                                <button aria-controls="#collapse-{{ id }}" aria-expanded="false" class="btn btn-secondary btn-sm" data-target="#collapse-{{ id }}" data-toggle="collapse" title="expand" type="button">
+                                    *
+                                </button>
+                                <button class="btn btn-secondary btn-sm" type="button">
+                                    x
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="collapse" id="collapse-{{ id }}">
+                            <td colspan="5">{{{ summary }}}</td>
                         </tr>
                     {{/each}}
                 </table>
