@@ -40,7 +40,7 @@ def add_feed() -> Response:
     # validate form data
     form = AddFeedForm()
     if not form.validate_on_submit():
-        flash('Invalid feed.', 'error')
+        flash('Invalid feed.', 'warning')
         return output
 
     url = form.url.data
@@ -64,7 +64,7 @@ def login() -> Response:
     # validate form data
     form = LoginForm()
     if not form.validate_on_submit():
-        flash('User login failed.', 'error')
+        flash('User login failed.', 'danger')
         return output
 
     name = form.name.data
@@ -74,13 +74,13 @@ def login() -> Response:
         # validate user & password
         model = UserModel.get(name=name)
         if not model or not check_password_hash(model.password_hash, password):
-            flash('User login failed.', 'error')
+            flash('User login failed.', 'danger')
             return output
 
         # login the user
         user = User(model.user_id, model.name)
         login_user(user, remember=True)
-        flash(f'User "{name}" logged in.', 'info')
+        flash(f'User "{name}" logged in.', 'success')
 
         return output
 
@@ -129,7 +129,7 @@ def upload_opml() -> Response:
     # validate the form
     form = OpmlUploadForm()
     if not form.validate_on_submit():
-        flash('Form bad')
+        flash('Form bad', 'warning')
         return output
 
     # import the feeds
