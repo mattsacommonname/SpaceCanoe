@@ -32,14 +32,18 @@ limitations under the License.
         {% endif %}
     {% endwith %}
     {% if current_user.is_authenticated %}
-        <div>
-            {{ current_user.name }} <a href="/logout">logout</a>
-            <button class="btn btn-primary" data-target="#addFeedModal" data-toggle="modal" type="button">
-                Add Feed
-            </button>
-            <button class="btn btn-primary" data-target="#uploadOpmlModal" data-toggle="modal" type="button">
-                Upload OPML
-            </button>
+        <div class="clearfix">
+            <div class="float-left">
+                <button class="btn btn-primary btn-sm" data-target="#addFeedModal" data-toggle="modal" type="button">
+                    Add Feed
+                </button>
+                <button class="btn btn-primary btn-sm" data-target="#uploadOpmlModal" data-toggle="modal" type="button">
+                    Upload OPML
+                </button>
+            </div>
+            <div class="float-right">
+                {{ current_user.name }} <a href="/logout">logout</a>
+            </div>
         </div>
         <div aria-hidden="true" aria-labelledby="addFeedModalLabel" class="modal" id="addFeedModal" role="dialog" tabindex="-1">
             <div class="modal-dialog" role="document">
