@@ -54,7 +54,7 @@ limitations under the License.
                         {{ add_feed_form.hidden_tag() }}
                         <div class="modal-body">
                             {{ add_feed_form.url.label}}
-                            {{ add_feed_form.url() }}
+                            {{ add_feed_form.url(class='form-control') }}
                         </div>
                         <div class="modal-footer">
                             <button class="btn btn-primary" type="submit">Add Feed</button>
@@ -76,7 +76,7 @@ limitations under the License.
                         {{ opml_upload_form.hidden_tag() }}
                         <div class="modal-body">
                             {{ opml_upload_form.opml.label }}
-                            {{ opml_upload_form.opml() }}
+                            {{ opml_upload_form.opml(class='form-control-file') }}
                         </div>
                         <div class="modal-footer">
                             <button class="btn btn-primary" type="submit">Upload</button>
