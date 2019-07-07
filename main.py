@@ -64,3 +64,7 @@ app.add_url_rule('/add_form', view_func=add_feed_route, methods=['POST'])
 app.add_url_rule('/login', view_func=login_route, methods=['POST'])
 app.add_url_rule('/logout', view_func=logout_route)
 app.add_url_rule('/upload_opml', view_func=upload_opml_route, methods=['POST'])
+
+
+if __name__ == '__main__':
+    app.run(debug=True, passthrough_errors=True, use_debugger=False, use_reloader=False)
