@@ -95,8 +95,8 @@ source_fields = {
     'last_fetch': fields.DateTime(attribute='source.last_fetch'),
     'link': fields.String(attribute='source.link'),
     # TODO: pick one tag field
-    'tag_labels': fields.List(fields.String(attribute='label')),
-    'tag_objects': fields.List(fields.Nested(tag_in_source_fields))
+    'tag_labels': fields.List(fields.String(attribute='label'), attribute='tags'),
+    # 'tag_objects': fields.List(fields.Nested(tag_in_source_fields), attribute='tags')  # TODO: fix, still broken
 }
 
 
