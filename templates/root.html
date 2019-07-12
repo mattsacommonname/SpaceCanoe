@@ -59,7 +59,7 @@ limitations under the License.
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <form method="post" action="{{ url_for('add_feed') }}">
+                    <form action="{{ url_for('add_feed') }}" method="post">
                         {{ add_feed_form.hidden_tag() }}
                         <div class="modal-body">
                             {{ add_feed_form.url.label}}
