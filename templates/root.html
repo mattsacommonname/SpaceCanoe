@@ -110,18 +110,18 @@ limitations under the License.
                             <td>
                                 <a href="{{ link }}">{{ title }}</a>
                             </td>
-                            <td>
+                            {{!--<td>
                                 <button aria-controls="#collapse-{{ id }}" aria-expanded="false" class="btn btn-secondary btn-sm" data-target="#collapse-{{ id }}" data-toggle="collapse" title="expand" type="button">
                                     *
                                 </button>
                                 <button class="btn btn-secondary btn-sm" type="button">
                                     x
                                 </button>
-                            </td>
+                            </td>--}}
                         </tr>
-                        <tr class="collapse" id="collapse-{{ id }}">
+                        {{!--<tr class="collapse" id="collapse-{{ id }}">
                             <td colspan="5">{{{ summary }}}</td>
-                        </tr>
+                        </tr>--}}
                     {{/each}}
                 </table>
             </script>
