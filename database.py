@@ -14,9 +14,17 @@
 
 
 from datetime import datetime
-from pony.orm import composite_key, Database, Optional, PrimaryKey, Required, Set
+from pony.orm import (
+    composite_key,
+    Database,
+    Optional,
+    PrimaryKey,
+    Required,
+    Set)
 from pony.orm.core import Attribute
-from uuid import UUID, uuid4
+from uuid import (
+    UUID,
+    uuid4)
 from werkzeug.security import generate_password_hash
 
 db = Database()

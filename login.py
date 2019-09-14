@@ -13,7 +13,9 @@
 # limitations under the License.
 
 
-from flask_login import LoginManager, UserMixin
+from flask_login import (
+    LoginManager,
+    UserMixin)
 from pony.orm import db_session
 from typing import Optional
 from uuid import UUID

@@ -14,13 +14,27 @@
 
 
 from collections import OrderedDict
-from flask_login import current_user, login_required
-from flask_restful import fields, marshal, Resource
-from pony.orm import db_session, desc, select
+from flask_login import (
+    current_user,
+    login_required)
+from flask_restful import (
+    fields,
+    marshal,
+    Resource)
+from pony.orm import (
+    db_session,
+    desc,
+    select)
 from pony.orm.core import Query
-from typing import Callable, List
+from typing import (
+    Callable,
+    List)
 
-from database import Entry as EntryModel, SourceUserData as SourceUserDataModel, Tag as TagModel, User as UserModel
+from database import (
+    Entry as EntryModel,
+    SourceUserData as SourceUserDataModel,
+    Tag as TagModel,
+    User as UserModel)
 
 
 def get_user_data_for_entry(entry: EntryModel) -> SourceUserDataModel:

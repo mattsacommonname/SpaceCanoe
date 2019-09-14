@@ -13,7 +13,9 @@
 # limitations under the License.
 
 
-from click import Argument, Command
+from click import (
+    Argument,
+    Command)
 from typing import List
 
 from feeds import update_feeds

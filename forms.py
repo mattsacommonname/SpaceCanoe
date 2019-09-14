@@ -14,9 +14,16 @@
 
 
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileAllowed, FileField, FileRequired
-from wtforms import PasswordField, StringField
-from wtforms.validators import DataRequired, URL
+from flask_wtf.file import (
+    FileAllowed,
+    FileField,
+    FileRequired)
+from wtforms import (
+    PasswordField,
+    StringField)
+from wtforms.validators import (
+    DataRequired,
+    URL)
 
 
 OPML_FILE_EXTENSIONS = ['opml', 'xml']

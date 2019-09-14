@@ -15,10 +15,16 @@
 
 from calendar import timegm
 from datetime import datetime
-from feedparser import parse, FeedParserDict
-from pony.orm import db_session, select
+from feedparser import (
+    parse,
+    FeedParserDict)
+from pony.orm import (
+    db_session,
+    select)
 from time import struct_time
-from typing import List, Optional
+from typing import (
+    List,
+    Optional)
 
 from database import Entry as EntryModel, Source as SourceModel, SourceUserData as SourceUserDataModel,\
     Tag as TagModel, User as UserModel

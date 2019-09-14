@@ -16,9 +16,14 @@
 from pony.orm import db_session
 from typing import Optional
 from uuid import UUID
-from xml.etree.ElementTree import Element, ElementTree, parse
+from xml.etree.ElementTree import (
+    Element,
+    ElementTree,
+    parse)
 
-from database import Tag as TagModel, User as UserModel
+from database import (
+    Tag as TagModel,
+    User as UserModel)
 from feeds import fetch_and_store_feed
 
 

@@ -17,12 +17,21 @@ from flask import Flask
 from flask_restful import Api
 from pony.orm import set_sql_debug
 
-from cli import AddUserCommand, UpdateCommand
+from cli import (
+    AddUserCommand,
+    UpdateCommand)
 from database import db
 from login import login_manager
-from rest import Entries as EntryResource, Sources as SourceResource, Tags as TagResource
-from routes import add_feed as add_feed_route, login as login_route, logout as logout_route, root as root_route,\
-    upload_opml as upload_opml_route
+from rest import (
+    Entries as EntryResource,
+    Sources as SourceResource,
+    Tags as TagResource)
+from routes import (
+    add_feed as add_feed_route,
+    login as login_route,
+    logout as logout_route,
+    root as root_route,
+    upload_opml as upload_opml_route)
 
 
 # application

@@ -13,15 +13,26 @@
 # limitations under the License.
 
 
-from flask import flash, redirect, render_template, url_for
-from flask_login import current_user, login_required, login_user, logout_user
+from flask import (
+    flash,
+    redirect,
+    render_template,
+    url_for)
+from flask_login import (
+    current_user,
+    login_required,
+    login_user,
+    logout_user)
 from pony.orm import db_session
 from werkzeug.security import check_password_hash
 from werkzeug.wrappers.response import Response
 
 from database import User as UserModel
 from feeds import fetch_and_store_feed
-from forms import AddFeedForm, LoginForm, OpmlUploadForm
+from forms import (
+    AddFeedForm,
+    LoginForm,
+    OpmlUploadForm)
 from login import User
 from opml import import_opml
 
