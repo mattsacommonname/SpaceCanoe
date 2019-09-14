@@ -13,13 +13,17 @@
  * limitations under the License.
  */
 
+(function () {
+
 $(document).ready(function(){
 
 $.get('/entries', function(data, status){
-    var source = $('#entries-template').html();
-    var template = Handlebars.compile(source);
-    var html = template(data);
+    let source = $('#entries-template').html();
+    let template = Handlebars.compile(source);
+    let html = template(data);
     $('#entries-table').html(html);
 });
 
 });
+
+})();
