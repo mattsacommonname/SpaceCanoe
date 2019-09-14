@@ -13,17 +13,41 @@
  * limitations under the License.
  */
 
-(function () {
+(function() {
 
+/*
+ * Downloads entries from REST API, then renders them to the given element.
+ *
+ * @param {string} feedsUrl The REST URL to download the feeds from.
+ * @param {string} templateId The ID of the Handlebars template to use for the render.
+ * @param {string} destinationId The ID of the destination element to render the feed template to.
+ */
+function refreshEntries(feedsUrl, templateId, destinationId) {
+    $.get(feedsUrl, function(data, status) {
+        let source = $(templateId).html();
+        let template = Handlebars.compile(source);
+        let html = template(data);
+        $(destinationId).html(html);
+    });
+}
+
+/**
+ * Click event handler for feedRefresh button.
+ *
+ * @param {Event} event The jQuery event. Currently unused.
+ */
+function feedRefresh_click(event) {
+    console.log(typeof event.constructor);
+    refreshEntries('/entries', '#entries-template', '#entries-table');
+}
+
+// perform logic that needs the DOM to have finished loading
 $(document).ready(function(){
+    // attach logic to events
+    $('#feedRefresh').click(feedRefresh_click);
 
-$.get('/entries', function(data, status){
-    let source = $('#entries-template').html();
-    let template = Handlebars.compile(source);
-    let html = template(data);
-    $('#entries-table').html(html);
-});
-
+    // initial load of feed entries
+    refreshEntries('/entries', '#entries-template', '#entries-table');
 });
 
 })();

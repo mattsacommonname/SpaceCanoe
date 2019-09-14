@@ -40,6 +40,7 @@ limitations under the License.
 {% if current_user.is_authenticated %}
     <div class="clearfix">
         <div class="float-left">
+            <button class="btn btn-primary btn-sm" id="feedRefresh" type="button">Refresh</button>
             <button class="btn btn-primary btn-sm" data-target="#addFeedModal" data-toggle="modal" type="button">
                 Add Feed
             </button>
