@@ -15,6 +15,7 @@
 
 from datetime import datetime
 from pony.orm import composite_key, Database, Optional, PrimaryKey, Required, Set
+from pony.orm.core import Attribute
 from uuid import UUID, uuid4
 from werkzeug.security import generate_password_hash
 
@@ -24,33 +25,33 @@ db = Database()
 class Entry(db.Entity):
     """An individual entry in a feed."""
 
-    link = Required(str)
-    source = Required('Source')
-    summary = Optional(str)
-    title = Required(str)
-    updated = Required(datetime)
+    link: Attribute = Required(str)
+    source: Attribute = Required('Source')
+    summary: Attribute = Optional(str)
+    title: Attribute = Required(str)
+    updated: Attribute = Required(datetime)
     composite_key(source, link, title, updated)
 
 
 class Source(db.Entity):
     """Feed source. Contains information for retrieving a feed, and some display information."""
 
-    feed_uri = Required(str, unique=True)
-    entries = Set(Entry)
-    fetched_label = Required(str)
-    last_check = Required(datetime)
-    last_fetch = Required(datetime)
-    link = Required(str)
-    user_data = Set('SourceUserData')
+    feed_uri: Attribute = Required(str, unique=True)
+    entries: Attribute = Set(Entry)
+    fetched_label: Attribute = Required(str)
+    last_check: Attribute = Required(datetime)
+    last_fetch: Attribute = Required(datetime)
+    link: Attribute = Required(str)
+    user_data: Attribute = Set('SourceUserData')
 
 
 class SourceUserData(db.Entity):
     """User-specific data for feed sources."""
 
-    source = Required(Source)
-    tags = Set('Tag')
-    user = Required('User')
-    user_label = Optional(str)
+    source: Attribute = Required(Source)
+    tags: Attribute = Set('Tag')
+    user: Attribute = Required('User')
+    user_label: Attribute = Optional(str)
     composite_key(source, user)
 
     @property
@@ -68,20 +69,20 @@ class SourceUserData(db.Entity):
 class Tag(db.Entity):
     """Organizational tag for feed sources."""
 
-    label = Required(str)
-    sources = Set(SourceUserData)
-    user = Required('User')
+    label: Attribute = Required(str)
+    sources: Attribute = Set(SourceUserData)
+    user: Attribute = Required('User')
     composite_key(label, user)
 
 
 class User(db.Entity):
     """User."""
 
-    user_id = PrimaryKey(UUID, default=uuid4)
-    name = Required(str, unique=True)
-    password_hash = Required(str)
-    sources = Set(SourceUserData)
-    tags = Set(Tag)
+    user_id: Attribute = PrimaryKey(UUID, default=uuid4)
+    name: Attribute = Required(str, unique=True)
+    password_hash: Attribute = Required(str)
+    sources: Attribute = Set(SourceUserData)
+    tags: Attribute = Set(Tag)
 
     @classmethod
     def build(cls, name: str, password: str) -> 'User':
@@ -93,6 +94,6 @@ class User(db.Entity):
         """
 
         password_hash = generate_password_hash(password)
-        user = User(name=name, password_hash=password_hash)
+        user: User = User(name=name, password_hash=password_hash)
 
         return user

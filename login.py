@@ -43,7 +43,7 @@ class User(UserMixin):
         :return: The user's UUID in a string format.
         """
 
-        id_text = str(self.user_id)
+        id_text: str = str(self.user_id)
         return id_text
 
 
@@ -56,7 +56,7 @@ def add_user(name: str, password: str) -> None:
 
     with db_session:
         # check if the user exists
-        model = UserModel.get(name=name)
+        model: Optional[UserModel] = UserModel.get(name=name)
         if model:
             print(f'User "{name}" already exists.')
             return
@@ -73,12 +73,12 @@ def load_user(user_id: str) -> Optional[User]:
     :return: The user if it's found. None if no matching user found.
     """
 
-    user_uuid = UUID(user_id)
+    user_uuid: UUID = UUID(user_id)
 
     with db_session:
-        model = UserModel[user_uuid]
+        model: Optional[UserModel] = UserModel[user_uuid]
         if not model:
             return None  # no matching user found
 
-        user = User(model.user_id, model.name)
+        user: User = User(model.user_id, model.name)
         return user

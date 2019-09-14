@@ -18,7 +18,7 @@ from datetime import datetime
 from feedparser import parse, FeedParserDict
 from pony.orm import db_session, select
 from time import struct_time
-from typing import List
+from typing import List, Optional
 
 from database import Entry as EntryModel, Source as SourceModel, SourceUserData as SourceUserDataModel,\
     Tag as TagModel, User as UserModel
@@ -32,9 +32,9 @@ def fetch_and_store_feed(url: str, tags: List[TagModel], user: UserModel) -> Non
     :param user: User adding/updating this feed.
     """
 
-    source = get_or_build_source(url)
+    source: SourceModel = get_or_build_source(url)
 
-    user_data = SourceUserDataModel.get(user=user, source=source)
+    user_data: SourceUserDataModel = SourceUserDataModel.get(user=user, source=source)
     if user_data is not None:
         update_tags(user_data, tags)
         return
@@ -49,18 +49,19 @@ def get_or_build_source(url: str) -> SourceModel:
     :return: The retrieved/built source.
     """
 
-    source = SourceModel.get(feed_uri=url)
+    source: Optional[SourceModel] = SourceModel.get(feed_uri=url)
     if source is not None:
         return source
 
-    feed = parse(url)
+    feed: dict = parse(url)
 
     # get feed info or defaults
-    feed_info = feed.get('feed', {})
-    label = feed_info.get('title', url)
-    link = feed_info.get('link', url)
+    feed_info: dict = feed.get('feed', {})
+    label: str = feed_info.get('title', url)
+    link: str = feed_info.get('link', url)
 
-    source = SourceModel(feed_uri=url, fetched_label=label, last_check=datetime.min, last_fetch=datetime.min, link=link)
+    source: SourceModel = SourceModel(feed_uri=url, fetched_label=label, last_check=datetime.min,
+                                      last_fetch=datetime.min, link=link)
     return source
 
 
@@ -75,8 +76,8 @@ def utc_timestamp_from_struct_time(parsed_time: struct_time) -> datetime:
     if not parsed_time:
         return datetime.min
 
-    timestamp = timegm(parsed_time)
-    utc_datetime = datetime.utcfromtimestamp(timestamp)
+    timestamp: float = timegm(parsed_time)
+    utc_datetime: datetime = datetime.utcfromtimestamp(timestamp)
     return utc_datetime
 
 
@@ -89,18 +90,18 @@ def process_entries(entries: List[FeedParserDict], source: SourceModel) -> None:
 
     for entry in entries:
         # build UTC time
-        updated_parsed = entry.get('updated_parsed', None)
-        updated = utc_timestamp_from_struct_time(updated_parsed)
+        updated_parsed: struct_time = entry.get('updated_parsed', None)
+        updated: datetime = utc_timestamp_from_struct_time(updated_parsed)
 
-        link = entry.get('link', None)
+        link: Optional[str] = entry.get('link', None)
         if not link:  # no point to an entry without a link
             continue
 
-        title = entry.get('title', link) or link
-        summary = entry.get('summary', '')
+        title: str = entry.get('title', link)
+        summary: str = entry.get('summary', '')
 
         # check if this entry already exists
-        check = EntryModel.get(link=link, source=source, title=title, updated=updated)
+        check: Optional[EntryModel] = EntryModel.get(link=link, source=source, title=title, updated=updated)
         if check is not None:
             continue
 
@@ -114,10 +115,10 @@ def update_feeds() -> None:
     with db_session:
         sources = select(s for s in SourceModel)
         for source in sources:
-            now = datetime.now()
+            now: datetime = datetime.now()
 
             # fetch & parse feed
-            feed = parse(source.feed_uri)
+            feed: dict = parse(source.feed_uri)
             source.last_check = now
 
             # check if download was successful
@@ -125,7 +126,7 @@ def update_feeds() -> None:
                 continue
 
             # update with new data, if we have any; use the old data otherwise
-            label = source.fetched_label
+            label: str = source.fetched_label
             source.fetched_label = feed.get('feed', {}).get('title', label)
             source.last_fetch = now
 

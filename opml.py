@@ -14,8 +14,9 @@
 
 
 from pony.orm import db_session
+from typing import Optional
 from uuid import UUID
-from xml.etree import ElementTree
+from xml.etree.ElementTree import Element, ElementTree, parse
 
 from database import Tag as TagModel, User as UserModel
 from feeds import fetch_and_store_feed
@@ -30,19 +31,19 @@ def import_opml(opml_stream, user_id: UUID) -> None:
     """
 
     # get the body element from the stream
-    tree = ElementTree.parse(opml_stream)
-    root_element = tree.getroot()
-    body = root_element.find('body')
+    tree: ElementTree = parse(opml_stream)
+    root_element: Element = tree.getroot()
+    body: Element = root_element.find('body')
 
     with db_session:
-        user = UserModel[user_id]
+        user: UserModel = UserModel[user_id]
 
         # recursively iterate through the outlines
         for outline in body:
             process_outline(outline, [], user)
 
 
-def process_outline(outline: ElementTree.Element, current_tags: list, user: UserModel) -> None:
+def process_outline(outline: Element, current_tags: list, user: UserModel) -> None:
     """Processes an OPML outline element. Feed elements will be added or updated as necessary, and child tags will be
     recursively processed.
 
@@ -52,18 +53,18 @@ def process_outline(outline: ElementTree.Element, current_tags: list, user: User
     """
 
     # get the attributes out of the outline
-    attrib = outline.attrib
+    attrib: dict = outline.attrib
 
     # is this a feed?
-    outline_type = attrib.get('type')
+    outline_type: str = attrib.get('type')
     if outline_type is not None and outline_type == 'rss':
-        url = attrib.get('xmlUrl')
+        url: str = attrib.get('xmlUrl')
         fetch_and_store_feed(url, current_tags, user)
         return
 
     # if this isn't a feed, it's a tag
-    text = attrib['text']
-    tag = TagModel.get(label=text, user=user)
+    text: str = attrib['text']
+    tag: Optional[TagModel] = TagModel.get(label=text, user=user)
     if tag is None:
         tag = TagModel(label=text, user=user)
 

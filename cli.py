@@ -14,6 +14,7 @@
 
 
 from click import Argument, Command
+from typing import List
 
 from feeds import update_feeds
 from login import add_user
@@ -28,11 +29,11 @@ def add_user_command(name: str, password: str) -> None:
     add_user(name, password)
 
 
-arg = Argument(('name',))
-params = [arg]
-arg = Argument(('password',))
+arg: Argument = Argument(('name',))
+params: List[Argument] = [arg]
+arg: Argument = Argument(('password',))
 params.append(arg)
-AddUserCommand = Command('au', callback=add_user_command, params=params)
+AddUserCommand: Command = Command('au', callback=add_user_command, params=params)
 
 
 def check_for_updates_command() -> None:
@@ -41,4 +42,4 @@ def check_for_updates_command() -> None:
     update_feeds()
 
 
-UpdateCommand = Command('up', callback=check_for_updates_command)
+UpdateCommand: Command = Command('up', callback=check_for_updates_command)

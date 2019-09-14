@@ -17,7 +17,8 @@ from collections import OrderedDict
 from flask_login import current_user, login_required
 from flask_restful import fields, marshal, Resource
 from pony.orm import db_session, desc, select
-from typing import List
+from pony.orm.core import Query
+from typing import Callable, List
 
 from database import Entry as EntryModel, SourceUserData as SourceUserDataModel, Tag as TagModel, User as UserModel
 
@@ -29,15 +30,15 @@ def get_user_data_for_entry(entry: EntryModel) -> SourceUserDataModel:
     :return: The related source user data.
     """
 
-    user = UserModel[current_user.user_id]
-    user_data = SourceUserDataModel.get(source=entry.source, user=user)
+    user: UserModel = UserModel[current_user.user_id]
+    user_data: SourceUserDataModel = SourceUserDataModel.get(source=entry.source, user=user)
 
     return user_data
 
 
 # entries
 
-source_in_entry_fields = {
+source_in_entry_fields: dict = {
     'id': fields.Integer(attribute='source.id'),
     'link': fields.String(attribute='source.link'),
     'label': fields.String,
@@ -45,7 +46,7 @@ source_in_entry_fields = {
 }
 
 
-entry_fields = {
+entry_fields: dict = {
     'id': fields.Integer,
     'link': fields.String,
     'source': fields.Nested(source_in_entry_fields, attribute=get_user_data_for_entry),
@@ -58,7 +59,7 @@ entry_fields = {
 class Entries(Resource):
     """REST endpoint for feed entries."""
 
-    decorators = [login_required]
+    decorators: List[Callable] = [login_required]
 
     @staticmethod
     def get() -> List[OrderedDict]:
@@ -69,25 +70,25 @@ class Entries(Resource):
 
         with db_session:
             # get a list of entries from sources of feeds followed by the logged-in user
-            user = UserModel[current_user.user_id]
-            sources = select(s.source for s in user.sources)
-            result = select(e for e in EntryModel if e.source in sources).order_by(desc(EntryModel.updated))
-            entries = list(result)
+            user: UserModel = UserModel[current_user.user_id]
+            sources: Query = select(s.source for s in user.sources)
+            result: Query = select(e for e in EntryModel if e.source in sources).order_by(desc(EntryModel.updated))
+            entries: List[EntryModel] = list(result)
 
             # marshall them to JSON-serializable dicts
-            output = marshal(entries, entry_fields)
+            output: List[OrderedDict] = marshal(entries, entry_fields)
             return output
 
 
 # sources
 
-tag_in_source_fields = {
+tag_in_source_fields: dict = {
     'id': fields.Integer,
     'label': fields.String
 }
 
 
-source_fields = {
+source_fields: dict = {
     'feed_uri': fields.String(attribute='source.feed_uri'),
     'id': fields.Integer(attribute='source.id'),
     'label': fields.String,
@@ -114,17 +115,17 @@ class Sources(Resource):
 
         with db_session:
             # get a list of sources followed by the logged-in user
-            user = UserModel[current_user.user_id]
-            sources = list(user.sources)
+            user: UserModel = UserModel[current_user.user_id]
+            sources: List[SourceUserDataModel] = list(user.sources)
 
             # marshall them to JSON-serializable dicts
-            output = marshal(sources, source_fields)
+            output: List[OrderedDict] = marshal(sources, source_fields)
             return output
 
 
 # tags
 
-tag_fields = {
+tag_fields: dict = {
     'id': fields.Integer,
     'label': fields.String
 }
@@ -144,9 +145,9 @@ class Tags(Resource):
 
         with db_session:
             # get tags from the user
-            user = UserModel[current_user.user_id]
-            tags = list(user.tags)
+            user: UserModel = UserModel[current_user.user_id]
+            tags: List[TagModel] = list(user.tags)
 
             # marshall them to JSON-serializable dicts
-            output = marshal(tags, tag_fields)
+            output: List[OrderedDict] = marshal(tags, tag_fields)
             return output

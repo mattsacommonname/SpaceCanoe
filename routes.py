@@ -34,18 +34,18 @@ def add_feed() -> Response:
     """
 
     # build the redirect, regardless of the result, we're currently always redirecting to the landing
-    url = url_for('root')
-    output = redirect(url)
+    url: str = url_for('root')
+    output: Response = redirect(url)
 
     # validate form data
-    form = AddFeedForm()
+    form: AddFeedForm = AddFeedForm()
     if not form.validate_on_submit():
         flash('Invalid feed.', 'warning')
         return output
 
-    url = form.url.data
+    url: str = form.url.data
     with db_session:
-        user = UserModel[current_user.user_id]
+        user: UserModel = UserModel[current_user.user_id]
         fetch_and_store_feed(url, [], user)
 
     return output
@@ -58,27 +58,27 @@ def login() -> Response:
     """
 
     # build the redirect, regardless of the result, we're currently always redirecting to the landing
-    url = url_for('root')
-    output = redirect(url)
+    url: str = url_for('root')
+    output: Response = redirect(url)
 
     # validate form data
-    form = LoginForm()
+    form: LoginForm = LoginForm()
     if not form.validate_on_submit():
         flash('User login failed.', 'danger')
         return output
 
-    name = form.name.data
-    password = form.password.data
+    name: str = form.name.data
+    password: str = form.password.data
 
     with db_session:
         # validate user & password
-        model = UserModel.get(name=name)
+        model: UserModel = UserModel.get(name=name)
         if not model or not check_password_hash(model.password_hash, password):
             flash('User login failed.', 'danger')
             return output
 
         # login the user
-        user = User(model.user_id, model.name)
+        user: User = User(model.user_id, model.name)
         login_user(user, remember=True)
         flash(f'User "{name}" logged in.', 'success')
 
@@ -92,11 +92,11 @@ def logout() -> Response:
     :return: A redirect to the landing page.
     """
 
-    name = current_user.name
+    name: str = current_user.name
     logout_user()
     flash(f'User "{name}" logged out.', 'info')
-    url = url_for('root')
-    output = redirect(url)
+    url: str = url_for('root')
+    output: Response = redirect(url)
     return output
 
 
@@ -106,12 +106,12 @@ def root() -> str:
     :return: A string of the rendered page.
     """
 
-    context = {
+    context: dict = {
         'add_feed_form': AddFeedForm(),
         'login_form': LoginForm(),
         'opml_upload_form': OpmlUploadForm()
     }
-    output = render_template('root.html', **context)
+    output: str = render_template('root.html', **context)
     return output
 
 
@@ -123,11 +123,11 @@ def upload_opml() -> Response:
     """
 
     # build the redirect
-    url = url_for('root')
-    output = redirect(url)
+    url: str = url_for('root')
+    output: Response = redirect(url)
 
     # validate the form
-    form = OpmlUploadForm()
+    form: OpmlUploadForm = OpmlUploadForm()
     if not form.validate_on_submit():
         flash('Form bad', 'warning')
         return output

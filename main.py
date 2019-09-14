@@ -27,7 +27,7 @@ from routes import add_feed as add_feed_route, login as login_route, logout as l
 
 # application
 
-app = Flask(__name__)
+app: Flask = Flask(__name__)
 app.config.from_pyfile('data/config.py')
 
 
@@ -40,7 +40,7 @@ db.generate_mapping(**app.config['PONY_MAPPINGS'])
 
 # REST API
 
-api = Api(app)
+api: Api = Api(app)
 api.add_resource(EntryResource, '/entries')
 api.add_resource(SourceResource, '/sources')
 api.add_resource(TagResource, '/tags')
