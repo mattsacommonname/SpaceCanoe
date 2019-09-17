@@ -20,6 +20,7 @@ limitations under the License.
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Feeds</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body>
 
@@ -40,16 +41,22 @@ limitations under the License.
 {% if current_user.is_authenticated %}
     <div class="clearfix">
         <div class="float-left">
-            <button class="btn btn-primary btn-sm" id="feedRefresh" type="button">Refresh</button>
-            <button class="btn btn-primary btn-sm" data-target="#addFeedModal" data-toggle="modal" type="button">
-                Add Feed
+            <button class="btn btn-primary btn-sm" id="feedRefresh" title="Refresh" type="button">
+                <i class="fa fa-refresh"></i>
             </button>
-            <button class="btn btn-primary btn-sm" data-target="#uploadOpmlModal" data-toggle="modal" type="button">
-                Upload OPML
+            <button class="btn btn-primary btn-sm" data-target="#addFeedModal" data-toggle="modal" title="Add Feed" type="button">
+                <i class="fa fa-rss"></i>
+            </button>
+            <button class="btn btn-primary btn-sm" data-target="#uploadOpmlModal" data-toggle="modal" title="Upload OPML" type="button">
+                <i class="fa fa-cloud-upload"></i>
             </button>
         </div>
         <div class="float-right">
-            {{ current_user.name }} <a href="/logout">logout</a>
+            <i class="fa fa-user-circle"></i>
+            {{ current_user.name }}
+            <a href="/logout">
+                <i class="fa fa-sign-out" title="logout"></i>
+            </a>
         </div>
     </div>
     <div aria-hidden="true" aria-labelledby="addFeedModalLabel" class="modal" id="addFeedModal" role="dialog" tabindex="-1">
@@ -68,7 +75,10 @@ limitations under the License.
                         {{ add_feed_form.url(class='form-control') }}
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" type="submit">Add Feed</button>
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fa fa-plus"></i>
+                            Add Feed
+                        </button>
                     </div>
                 </form>
             </div>
@@ -90,7 +100,10 @@ limitations under the License.
                         {{ opml_upload_form.opml(class='form-control-file') }}
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" type="submit">Upload</button>
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fa fa-cloud-upload"></i>
+                            Upload
+                        </button>
                     </div>
                 </form>
             </div>
