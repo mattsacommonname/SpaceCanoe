@@ -15,7 +15,7 @@
 
 (function() {
 
-/*
+/**
  * Downloads entries from REST API, then renders them to the given element.
  *
  * @param {string} feedsUrl The REST URL to download the feeds from.
@@ -45,6 +45,7 @@ function feedRefresh_click(event) {
 $(document).ready(function(){
     // attach logic to events
     $('#feedRefresh').click(feedRefresh_click);
+    $(document).on('show.bs.modal', '#addFeedModal', function () {console.log('showed addFeedModal')});
 
     // initial load of feed entries
     refreshEntries('/entries', '#entries-template', '#entries-table');
