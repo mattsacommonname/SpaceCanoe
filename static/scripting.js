@@ -37,7 +37,7 @@ function refreshEntries(feedsUrl, templateId, destinationId) {
  * @param {Event} event The jQuery event. Currently unused.
  */
 function feedRefresh_click(event) {
-    console.log(typeof event.constructor);
+    $('#entries-table').html('<div class="spinner-border"></div>');
     refreshEntries('/entries', '#entries-template', '#entries-table');
 }
 

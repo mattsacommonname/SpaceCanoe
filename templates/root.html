@@ -40,7 +40,7 @@ limitations under the License.
 {%- endwith -%}
 {%- if current_user.is_authenticated %}
     <div class="clearfix">
-        <div class="float-left">
+        <div class="btn-group float-left">
             <button class="btn btn-primary btn-sm" id="feedRefresh" title="Refresh" type="button">
                 <i class="fa fa-refresh"></i>
             </button>
@@ -109,7 +109,9 @@ limitations under the License.
             </div>
         </div>
     </div>
-    <div id="entries-table">Loading...</div>
+    <div id="entries-table">
+        <div class="spinner-border"></div>
+    </div>
     {%- raw %}
         <script id="entries-template" type="text/x-handlebars-template">
             <table class="table table-striped table-dark table-sm">
